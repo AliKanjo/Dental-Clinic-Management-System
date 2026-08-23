@@ -1,0 +1,294 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@dental.com",
+      "password_hash": "$2a$10$t177V9SIge7Wiqod7j9GA.sZ03W7GU2.WSMsBfjZ9W6CRhGnj3geq",
+      "role": "admin",
+      "first_name": "Super",
+      "last_name": "Admin",
+      "phone": "555-0100",
+      "created_at": "2026-08-23T15:59:47.752Z"
+    },
+    {
+      "id": 2,
+      "email": "sarah.jenkins@dental.com",
+      "password_hash": "$2a$10$t177V9SIge7Wiqod7j9GA.6LZmmxov5jXQoSIW49Q4wuH2LKZ2hUe",
+      "role": "dentist",
+      "first_name": "Sarah",
+      "last_name": "Jenkins",
+      "phone": "555-0201",
+      "created_at": "2026-08-23T15:59:47.754Z"
+    },
+    {
+      "id": 3,
+      "email": "robert.chen@dental.com",
+      "password_hash": "$2a$10$t177V9SIge7Wiqod7j9GA.6LZmmxov5jXQoSIW49Q4wuH2LKZ2hUe",
+      "role": "dentist",
+      "first_name": "Robert",
+      "last_name": "Chen",
+      "phone": "555-0202",
+      "created_at": "2026-08-23T15:59:47.754Z"
+    },
+    {
+      "id": 4,
+      "email": "emily.watson@dental.com",
+      "password_hash": "$2a$10$t177V9SIge7Wiqod7j9GA.ZUDv3N6RrxnVXaYS5kIfLPVR6SGjv5m",
+      "role": "staff",
+      "first_name": "Emily",
+      "last_name": "Watson",
+      "phone": "555-0301",
+      "created_at": "2026-08-23T15:59:47.754Z"
+    },
+    {
+      "id": 5,
+      "email": "john.doe@dental.com",
+      "password_hash": "$2a$10$t177V9SIge7Wiqod7j9GA.FRIAN5VzkJLB6zIgoIgXFmxLjHNOCCu",
+      "role": "patient",
+      "first_name": "John",
+      "last_name": "Doe",
+      "phone": "555-0401",
+      "created_at": "2026-08-23T15:59:47.754Z"
+    }
+  ],
+  "dentists": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "specialization": "General Dentistry",
+      "license_number": "LIC-100234",
+      "color_code": "#06b6d4"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "specialization": "Orthodontics & Implants",
+      "license_number": "LIC-100987",
+      "color_code": "#6366f1"
+    }
+  ],
+  "patients": [
+    {
+      "id": 1,
+      "user_id": 5,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@dental.com",
+      "phone": "555-0401",
+      "date_of_birth": "1985-05-12",
+      "gender": "Male",
+      "address": "123 Pine St, Seattle",
+      "medical_allergies": "Penicillin",
+      "notes": "Requires pre-medication before root canal.",
+      "created_at": "2026-08-23T15:59:47.758Z"
+    },
+    {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@gmail.com",
+      "phone": "555-0402",
+      "date_of_birth": "1990-09-20",
+      "gender": "Female",
+      "address": "456 Oak Ave, Bellevue",
+      "medical_allergies": "None",
+      "notes": "Anxious during surgery.",
+      "created_at": "2026-08-23T15:59:47.758Z"
+    },
+    {
+      "id": 3,
+      "first_name": "Alice",
+      "last_name": "Johnson",
+      "email": "alice.j@outlook.com",
+      "phone": "555-0403",
+      "date_of_birth": "1978-02-04",
+      "gender": "Female",
+      "address": "789 Maple Rd, Redmond",
+      "medical_allergies": "Sulfa drugs",
+      "notes": "Interested in teeth whitening.",
+      "created_at": "2026-08-23T15:59:47.758Z"
+    },
+    {
+      "id": 4,
+      "first_name": "Bob",
+      "last_name": "Martinez",
+      "email": "bob.m@yahoo.com",
+      "phone": "555-0404",
+      "date_of_birth": "1995-11-30",
+      "gender": "Male",
+      "address": "321 Elm Blvd, Seattle",
+      "medical_allergies": "Latex",
+      "notes": "Prefers morning appointments.",
+      "created_at": "2026-08-23T15:59:47.758Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1,
+      "patient_id": 1,
+      "dentist_id": 1,
+      "start_time": "2026-08-22T07:00:00.000Z",
+      "end_time": "2026-08-22T08:00:00.000Z",
+      "status": "completed",
+      "notes": "Routine composite filling completed on #14."
+    },
+    {
+      "id": 2,
+      "patient_id": 2,
+      "dentist_id": 1,
+      "start_time": "2026-08-23T11:30:00.000Z",
+      "end_time": "2026-08-23T12:30:00.000Z",
+      "status": "scheduled",
+      "notes": "Routine scale and cleaning."
+    },
+    {
+      "id": 3,
+      "patient_id": 3,
+      "dentist_id": 2,
+      "start_time": "2026-08-24T06:00:00.000Z",
+      "end_time": "2026-08-24T07:00:00.000Z",
+      "status": "scheduled",
+      "notes": "Invisalign records collection."
+    }
+  ],
+  "treatments": [
+    {
+      "id": 1,
+      "name": "Teeth Cleaning & Polish",
+      "description": "Routine scale and polish with fluoride treatment",
+      "base_cost": 100
+    },
+    {
+      "id": 2,
+      "name": "Composite Filling",
+      "description": "Tooth-colored composite restoration for cavities",
+      "base_cost": 150
+    },
+    {
+      "id": 3,
+      "name": "Root Canal Therapy",
+      "description": "Endodontic treatment to save infected tooth",
+      "base_cost": 800
+    },
+    {
+      "id": 4,
+      "name": "Porcelain Crown",
+      "description": "Full-coverage cosmetic crown restoration",
+      "base_cost": 1200
+    },
+    {
+      "id": 5,
+      "name": "Simple Extraction",
+      "description": "Surgical removal of damaged or decayed tooth",
+      "base_cost": 200
+    },
+    {
+      "id": 6,
+      "name": "Invisalign Consultation",
+      "description": "Clear aligner assessment and orthopanoramic review",
+      "base_cost": 150
+    }
+  ],
+  "treatment_plans": [
+    {
+      "id": 1,
+      "patient_id": 1,
+      "dentist_id": 1,
+      "title": "Restoration & Crown Plan",
+      "status": "active",
+      "total_cost": 1350,
+      "created_at": "2026-08-22T07:00:00.000Z"
+    }
+  ],
+  "treatment_plan_items": [
+    {
+      "id": 1,
+      "treatment_plan_id": 1,
+      "treatment_id": 2,
+      "tooth_number": "14",
+      "notes": "Mesial-Occlusal composite",
+      "cost": 150,
+      "status": "completed"
+    },
+    {
+      "id": 2,
+      "treatment_plan_id": 1,
+      "treatment_id": 4,
+      "tooth_number": "15",
+      "notes": "Full porcelain crown",
+      "cost": 1200,
+      "status": "pending"
+    }
+  ],
+  "invoices": [
+    {
+      "id": 1,
+      "treatment_plan_id": 1,
+      "patient_id": 1,
+      "amount_due": 150,
+      "discount": 0,
+      "tax": 0,
+      "total_amount": 150,
+      "amount_paid": 150,
+      "status": "paid",
+      "due_date": "2026-08-22",
+      "created_at": "2026-08-22T07:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "treatment_plan_id": 1,
+      "patient_id": 1,
+      "amount_due": 1200,
+      "discount": 0,
+      "tax": 0,
+      "total_amount": 1200,
+      "amount_paid": 0,
+      "status": "unpaid",
+      "due_date": "2026-08-24",
+      "created_at": "2026-08-24T06:00:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "invoice_id": 1,
+      "amount": 150,
+      "payment_method": "card",
+      "transaction_ref": "TX-778899",
+      "created_at": "2026-08-22T07:00:00.000Z"
+    }
+  ],
+  "leads": [
+    {
+      "id": 1,
+      "first_name": "Arthur",
+      "last_name": "Pendragon",
+      "email": "arthur@royal.com",
+      "phone": "555-0601",
+      "source": "web",
+      "status": "new",
+      "created_at": "2026-08-23T15:59:47.770Z"
+    },
+    {
+      "id": 2,
+      "first_name": "Gwen",
+      "last_name": "Guinevere",
+      "email": "gwen.g@camelot.com",
+      "phone": "555-0602",
+      "source": "social",
+      "status": "contacted",
+      "created_at": "2026-08-23T15:59:47.770Z"
+    },
+    {
+      "id": 3,
+      "first_name": "Lancelot",
+      "last_name": "DuLac",
+      "email": "lance@lake.com",
+      "phone": "555-0603",
+      "source": "referral",
+      "status": "converted",
+      "created_at": "2026-08-23T15:59:47.770Z"
+    }
+  ],
+  "follow_ups": []
+}

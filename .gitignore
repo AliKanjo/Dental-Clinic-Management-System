@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Local database
+dental.db
+dental.db-journal
+
+# Temporary files & logs
+*.log
+cleaned_text.txt
+client_bootstrap.json
+script_2_0.json
+extracted_strings.txt
+extracted_chat.md
+temp_repo/
+next_data.json
+script_*
+
+# OS metadata
+.DS_Store
+Thumbs.db
