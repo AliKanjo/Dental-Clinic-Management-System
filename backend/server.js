@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dental-secret-key-12345';
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- Authentication Middleware ---
 function authenticateToken(req, res, next) {
@@ -693,7 +693,7 @@ app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentis
 
 // Catch-all route to serve SPA frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 app.listen(PORT, () => {

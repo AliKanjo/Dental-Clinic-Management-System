@@ -149,6 +149,14 @@
       "end_time": "2026-08-24T07:00:00.000Z",
       "status": "scheduled",
       "notes": "Invisalign records collection."
+    },
+    {
+      "patient_id": 1,
+      "dentist_id": 1,
+      "start_time": "2026-08-25T06:00:00.000Z",
+      "end_time": "2026-08-25T07:00:00.000Z",
+      "status": "scheduled",
+      "notes": ""
     }
   ],
   "treatments": [
