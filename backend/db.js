@@ -21,7 +21,7 @@ function saveToDisk() {
   const tables = [
     'users', 'dentists', 'patients', 'appointments', 'treatments',
     'treatment_plans', 'treatment_plan_items', 'invoices', 'payments',
-    'leads', 'follow_ups'
+    'leads', 'follow_ups', 'prescriptions', 'stock'
   ];
   const data = {};
   tables.forEach(t => {
@@ -30,12 +30,32 @@ function saveToDisk() {
   fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+const tableDefinitions = {
+  users: `CREATE TABLE users (id INT IDENTITY, email STRING, password_hash STRING, role STRING, first_name STRING, last_name STRING, phone STRING, created_at STRING)`,
+  dentists: `CREATE TABLE dentists (id INT IDENTITY, user_id INT, specialization STRING, license_number STRING, color_code STRING)`,
+  patients: `CREATE TABLE patients (id INT IDENTITY, user_id INT, first_name STRING, last_name STRING, email STRING, phone STRING, date_of_birth STRING, gender STRING, address STRING, medical_allergies STRING, notes STRING, created_at STRING)`,
+  appointments: `CREATE TABLE appointments (id INT IDENTITY, patient_id INT, dentist_id INT, start_time STRING, end_time STRING, status STRING, notes STRING)`,
+  treatments: `CREATE TABLE treatments (id INT IDENTITY, name STRING, description STRING, base_cost REAL)`,
+  treatment_plans: `CREATE TABLE treatment_plans (id INT IDENTITY, patient_id INT, dentist_id INT, title STRING, status STRING, total_cost REAL, created_at STRING)`,
+  treatment_plan_items: `CREATE TABLE treatment_plan_items (id INT IDENTITY, treatment_plan_id INT, treatment_id INT, tooth_number STRING, notes STRING, cost REAL, status STRING)`,
+  invoices: `CREATE TABLE invoices (id INT IDENTITY, treatment_plan_id INT, patient_id INT, amount_due REAL, discount REAL, tax REAL, total_amount REAL, amount_paid REAL, status STRING, due_date STRING, created_at STRING)`,
+  payments: `CREATE TABLE payments (id INT IDENTITY, invoice_id INT, amount REAL, payment_method STRING, transaction_ref STRING, created_at STRING)`,
+  leads: `CREATE TABLE leads (id INT IDENTITY, first_name STRING, last_name STRING, email STRING, phone STRING, source STRING, status STRING, created_at STRING)`,
+  follow_ups: `CREATE TABLE follow_ups (id INT IDENTITY, patient_id INT, lead_id INT, assigned_to INT, scheduled_date STRING, notes STRING, status STRING, completed_at STRING)`,
+  prescriptions: `CREATE TABLE prescriptions (id INT IDENTITY, patient_id INT, dentist_id INT, medication STRING, dosage STRING, instructions STRING, created_at STRING)`,
+  stock: `CREATE TABLE stock (id INT IDENTITY, item_name STRING, category STRING, quantity INT, unit STRING, reorder_level INT, last_updated STRING)`
+};
+
 function loadFromDisk() {
   if (!fs.existsSync(jsonPath)) return false;
   try {
     const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
     for (let table in data) {
-      alasql(`CREATE TABLE ${table}`);
+      if (tableDefinitions[table]) {
+        alasql(tableDefinitions[table]);
+      } else {
+        alasql(`CREATE TABLE ${table}`);
+      }
       data[table].forEach(row => {
         const keys = Object.keys(row);
         const placeholders = keys.map(() => '?').join(',');
@@ -57,18 +77,9 @@ function initDatabase() {
 
   console.log('Initializing new database tables in Alasql...');
 
-  // Create tables using standard alasql IDENTITY column (auto-increment)
-  alasql(`CREATE TABLE users (id INT IDENTITY, email STRING, password_hash STRING, role STRING, first_name STRING, last_name STRING, phone STRING, created_at STRING)`);
-  alasql(`CREATE TABLE dentists (id INT IDENTITY, user_id INT, specialization STRING, license_number STRING, color_code STRING)`);
-  alasql(`CREATE TABLE patients (id INT IDENTITY, user_id INT, first_name STRING, last_name STRING, email STRING, phone STRING, date_of_birth STRING, gender STRING, address STRING, medical_allergies STRING, notes STRING, created_at STRING)`);
-  alasql(`CREATE TABLE appointments (id INT IDENTITY, patient_id INT, dentist_id INT, start_time STRING, end_time STRING, status STRING, notes STRING)`);
-  alasql(`CREATE TABLE treatments (id INT IDENTITY, name STRING, description STRING, base_cost REAL)`);
-  alasql(`CREATE TABLE treatment_plans (id INT IDENTITY, patient_id INT, dentist_id INT, title STRING, status STRING, total_cost REAL, created_at STRING)`);
-  alasql(`CREATE TABLE treatment_plan_items (id INT IDENTITY, treatment_plan_id INT, treatment_id INT, tooth_number STRING, notes STRING, cost REAL, status STRING)`);
-  alasql(`CREATE TABLE invoices (id INT IDENTITY, treatment_plan_id INT, patient_id INT, amount_due REAL, discount REAL, tax REAL, total_amount REAL, amount_paid REAL, status STRING, due_date STRING, created_at STRING)`);
-  alasql(`CREATE TABLE payments (id INT IDENTITY, invoice_id INT, amount REAL, payment_method STRING, transaction_ref STRING, created_at STRING)`);
-  alasql(`CREATE TABLE leads (id INT IDENTITY, first_name STRING, last_name STRING, email STRING, phone STRING, source STRING, status STRING, created_at STRING)`);
-  alasql(`CREATE TABLE follow_ups (id INT IDENTITY, patient_id INT, lead_id INT, assigned_to INT, scheduled_date STRING, notes STRING, status STRING, completed_at STRING)`);
+  for (let table in tableDefinitions) {
+    alasql(tableDefinitions[table]);
+  }
 
   // Seeding mock data
   const salt = bcrypt.genSaltSync(10);
@@ -161,6 +172,21 @@ function initDatabase() {
   alasql(`INSERT INTO payments (invoice_id, amount, payment_method, transaction_ref, created_at) VALUES 
     (1, 150.0, 'card', 'TX-778899', ?)`
     , [yesterday.toISOString()]
+  );
+
+  alasql(`INSERT INTO prescriptions (patient_id, dentist_id, medication, dosage, instructions, created_at) VALUES 
+    (1, 2, 'Amoxicillin 500mg', '1 tablet 3 times a day', 'Take with food for 7 days', ?),
+    (2, 3, 'Ibuprofen 400mg', '1 tablet every 6 hours', 'Take as needed for pain relief', ?)`
+    , [yesterday.toISOString(), yesterday.toISOString()]
+  );
+
+  alasql(`INSERT INTO stock (item_name, category, quantity, unit, reorder_level, last_updated) VALUES 
+    ('Dental Composite Syringes (A2)', 'Consumables', 25, 'pcs', 10, ?),
+    ('Latex Examination Gloves (M)', 'Consumables', 150, 'boxes', 20, ?),
+    ('Anesthetic Cartridges (Articaine)', 'Drugs', 5, 'boxes', 8, ?),
+    ('Disposable Saliva Ejectors', 'Consumables', 80, 'packs', 15, ?),
+    ('Dental Mirror Handles #4', 'Instruments', 12, 'pcs', 5, ?)`
+    , [yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString()]
   );
 
   saveToDisk();

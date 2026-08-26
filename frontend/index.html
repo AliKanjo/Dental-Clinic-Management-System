@@ -44,13 +44,13 @@
           <input type="password" id="login-password" required placeholder="••••••••">
         </div>
         <button type="submit" class="btn btn-primary btn-block">Log In</button>
-        <p class="auth-toggle">Need patient access? <a href="#" id="go-to-register">Register as Patient</a></p>
+        <p class="auth-toggle">Don't have an account? <a href="#" id="go-to-register">Sign Up</a></p>
       </form>
 
       <!-- Register Form -->
       <form id="register-form" class="auth-form hidden">
-        <h2>Patient Registration</h2>
-        <p class="auth-subtitle">Create a patient account to book appointments and view invoices online.</p>
+        <h2>Create Your Account</h2>
+        <p class="auth-subtitle">Choose your role and register to access the clinic system.</p>
         <div class="form-row">
           <div class="form-group">
             <label for="reg-first-name">First Name</label>
@@ -70,10 +70,19 @@
           <input type="password" id="reg-password" placeholder="••••••••">
         </div>
         <div class="form-group">
+          <label for="reg-role">Account Role</label>
+          <select id="reg-role" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+            <option value="patient">Patient</option>
+            <option value="dentist">Dentist (Doctor)</option>
+            <option value="staff">Clinic Staff</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="reg-phone">Phone Number</label>
           <input type="tel" id="reg-phone" placeholder="555-0199">
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Create Patient Account</button>
+        <button type="submit" class="btn btn-primary btn-block">Create Account</button>
         <p class="auth-toggle">Already have an account? <a href="#" id="go-to-login">Log In</a></p>
       </form>
     </div>

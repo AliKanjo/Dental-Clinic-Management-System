@@ -115,6 +115,13 @@ function renderSidebar() {
           { key: 'packages', label: 'Packages & Services', icon: 'package' },
           { key: 'stock', label: 'Medical Stock', icon: 'archive' }
         ]
+      },
+      {
+        category: 'ADMIN SETTINGS',
+        roles: ['admin'],
+        items: [
+          { key: 'users', label: 'Staff & Users', icon: 'shield' }
+        ]
       }
     ];
 
@@ -200,6 +207,26 @@ async function navigate(route) {
       case 'myrecords':
         viewTitle.textContent = 'My Treatment Summary';
         await renderPatientRecordsPortal(workspace);
+        break;
+      case 'followups':
+        viewTitle.textContent = 'CRM Follow-ups';
+        await renderFollowupsView(workspace);
+        break;
+      case 'prescriptions':
+        viewTitle.textContent = 'Prescription Hub';
+        await renderPrescriptionsView(workspace);
+        break;
+      case 'packages':
+        viewTitle.textContent = 'Packages & Services';
+        await renderPackagesView(workspace);
+        break;
+      case 'stock':
+        viewTitle.textContent = 'Medical Stock & Inventory';
+        await renderStockView(workspace);
+        break;
+      case 'users':
+        viewTitle.textContent = 'Staff & User Accounts';
+        await renderUsersView(workspace);
         break;
       default:
         // Check for specific profile sub-views e.g. #patient-360-4
@@ -310,17 +337,18 @@ function initEventListeners() {
     const lastName = document.getElementById('reg-last-name').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-password').value;
+    const role = document.getElementById('reg-role').value;
     const phone = document.getElementById('reg-phone').value;
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: 'patient', firstName, lastName, phone })
+        body: JSON.stringify({ email, password, role, firstName, lastName, phone })
       });
       const data = await res.json();
       if (res.ok) {
-        showToast('Patient account created. Please log in.', 'success');
+        showToast('Account created. Please log in.', 'success');
         document.getElementById('register-form').classList.add('hidden');
         document.getElementById('login-form').classList.remove('hidden');
       } else {
@@ -904,8 +932,18 @@ async function renderPatient360View(container, patientId) {
 
       <!-- Clinical Notes -->
       <div class="tab-content-panel" id="tab-notes">
-        <h4>Clinical History Notes</h4>
-        <div style="background:var(--bg-primary); padding:16px; border-radius:var(--radius-md); font-size:0.9rem; margin-top:16px;">
+        <div class="view-header-actions" style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+          <h4>Clinical History Notes</h4>
+          ${state.user.role !== 'patient' ? `<button class="btn btn-secondary" id="btn-edit-medical-notes" style="display:flex; align-items:center; gap:6px;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i>Edit Medical Notes</button>` : ''}
+        </div>
+        
+        <div style="margin-bottom:16px;">
+          <strong style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Medical Allergies:</strong>
+          <span class="badge ${p.medical_allergies && p.medical_allergies.toLowerCase() !== 'none' ? 'danger' : 'success'}">${p.medical_allergies || 'None'}</span>
+        </div>
+
+        <strong style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Internal Diagnostic Logs:</strong>
+        <div style="background:var(--bg-primary); padding:16px; border-radius:var(--radius-md); font-size:0.9rem;">
           ${p.notes ? p.notes.replace(/\n/g, '<br>') : 'No diagnosis notes logged yet.'}
         </div>
       </div>
@@ -915,6 +953,7 @@ async function renderPatient360View(container, patientId) {
   // Bind events
   if (state.user.role !== 'patient') {
     document.getElementById('btn-create-plan').addEventListener('click', () => openCreatePlanModal(p.id));
+    document.getElementById('btn-edit-medical-notes').addEventListener('click', () => openEditMedicalNotesModal(p));
   }
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -927,6 +966,123 @@ async function renderPatient360View(container, patientId) {
   });
 
   lucide.createIcons();
+}
+
+function openEditMedicalNotesModal(patient) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:600px;">
+      <div class="modal-header">
+        <h3>Edit Medical Notes — ${patient.first_name} ${patient.last_name}</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="edit-medical-notes-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Medical Allergies</label>
+            <input type="text" id="edit-p-allergies" value="${patient.medical_allergies || 'None'}" placeholder="e.g. Penicillin, Latex, None" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          
+          <div class="form-group" style="position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label>Internal Diagnostic Notes</label>
+              <button class="btn btn-secondary" type="button" id="btn-ai-optimize-notes" style="padding:4px 8px; font-size:0.75rem; background-color:rgba(79, 70, 229, 0.05); color:#4f46e5; border:1px dashed #4f46e5; display:flex; align-items:center; gap:4px;">
+                <i data-lucide="sparkles" style="width:12px;height:12px;"></i>Optimize with AI
+              </button>
+            </div>
+            <textarea id="edit-p-notes" rows="8" style="width:100%; font-family:inherit; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);" placeholder="Type diagnosis notes here...">${patient.notes || ''}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  // AI Optimize click handler
+  document.getElementById('btn-ai-optimize-notes').addEventListener('click', async () => {
+    const notesTextarea = document.getElementById('edit-p-notes');
+    const allergiesInput = document.getElementById('edit-p-allergies');
+    const rawNotes = notesTextarea.value;
+
+    if (!rawNotes || rawNotes.trim() === '') {
+      showToast('Please type some clinical notes to optimize.', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-ai-optimize-notes');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader-spinner" style="border-color:#4f46e5; border-top-color:transparent;"></span>Optimizing...';
+
+    try {
+      const optimizeRes = await fetch('/api/ai/optimize-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: rawNotes })
+      });
+      const data = await optimizeRes.json();
+      if (optimizeRes.ok && data) {
+        if (data.formattedNotes) {
+          const cleanText = data.formattedNotes.replace(/<p>/g, '').replace(/<\/p>/g, '\n\n').replace(/<br\s*\/?>/g, '\n').replace(/<li>/g, '• ').replace(/<\/li>/g, '\n').replace(/<ul>/g, '').replace(/<\/ul>/g, '').trim();
+          notesTextarea.value = cleanText;
+        }
+        if (data.allergies && data.allergies.toLowerCase() !== 'none') {
+          allergiesInput.value = data.allergies;
+          showToast('AI successfully optimized notes and extracted allergies!', 'success');
+        } else {
+          showToast('AI successfully optimized notes!', 'success');
+        }
+      } else {
+        showToast(data.error || 'AI optimization failed.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error querying AI helper.', 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      lucide.createIcons();
+    }
+  });
+
+  // Submit form handler
+  document.getElementById('edit-medical-notes-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      firstName: patient.first_name,
+      lastName: patient.last_name,
+      email: patient.email,
+      phone: patient.phone,
+      dateOfBirth: patient.date_of_birth,
+      gender: patient.gender,
+      address: patient.address,
+      allergies: document.getElementById('edit-p-allergies').value,
+      notes: document.getElementById('edit-p-notes').value
+    };
+
+    try {
+      const updateRes = await fetch(`/api/patients/${patient.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (updateRes.ok) {
+        showToast('Medical record updated successfully', 'success');
+        modal.remove();
+        navigate(`patient-360-${patient.id}`);
+      } else {
+        const err = await updateRes.json();
+        showToast(err.error || 'Failed to update medical record', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error updating medical record.', 'danger');
+    }
+  });
 }
 
 function calculateAge(dobStr) {
@@ -1036,6 +1192,18 @@ async function openCreatePlanModal(patientId) {
           </div>
         </div>
 
+        <div style="background: rgba(79, 70, 229, 0.05); border: 1px dashed #4f46e5; border-radius: var(--radius-md); padding: 12px; margin-top: 12px; margin-bottom: 16px;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: #4f46e5; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>AI Smart Suggestion Assistant
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="ai-symptoms-input" placeholder="Describe symptoms, e.g. pain in molar 19, patient needs a porcelain crown." style="flex: 1; font-size: 0.85rem; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-primary); color: var(--text-primary);">
+            <button class="btn btn-primary" type="button" id="btn-ai-suggest-plan" style="padding: 8px 16px; background-color: #4f46e5; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="wand-2" style="width: 14px; height: 14px;"></i>Suggest
+            </button>
+          </div>
+        </div>
+
         <div style="border-top:1px solid var(--border-color); padding-top:16px; margin-top:8px;">
           <h4 style="font-size:0.95rem; margin-bottom:12px;">Add Dental Procedures</h4>
           <div class="form-row">
@@ -1072,6 +1240,59 @@ async function openCreatePlanModal(patientId) {
 
   const selectedItems = [];
   const itemsContainer = document.getElementById('added-plan-items');
+
+  // AI Suggestion Handler
+  document.getElementById('btn-ai-suggest-plan').addEventListener('click', async () => {
+    const input = document.getElementById('ai-symptoms-input');
+    const symptoms = input.value;
+    if (!symptoms || symptoms.trim() === '') {
+      showToast('Please type the symptoms or care description.', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-ai-suggest-plan');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader-spinner" style="border-color: #ffffff; border-top-color: transparent;"></span>Suggesting...';
+
+    try {
+      const suggestRes = await fetch('/api/ai/suggest-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptoms })
+      });
+      const data = await suggestRes.json();
+      if (suggestRes.ok && Array.isArray(data)) {
+        if (data.length === 0) {
+          showToast('AI suggested no matching treatments from the catalog.', 'info');
+        } else {
+          data.forEach(sug => {
+            const treat = treatments.find(t => String(t.id) === String(sug.treatmentId));
+            if (treat) {
+              selectedItems.push({
+                treatmentId: sug.treatmentId,
+                name: treat.name,
+                cost: sug.cost || treat.base_cost,
+                toothNumber: sug.toothNumber || '',
+                notes: sug.notes || ''
+              });
+            }
+          });
+          renderAddedItems();
+          showToast(`AI successfully added ${data.length} procedures!`, 'success');
+          input.value = '';
+        }
+      } else {
+        showToast(data.error || 'AI suggestion failed.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error querying AI helper.', 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      lucide.createIcons();
+    }
+  });
 
   // Trigger Add procedure to list
   document.getElementById('btn-add-item-to-plan').addEventListener('click', () => {
@@ -1180,6 +1401,7 @@ async function renderAppointmentsView(container) {
           <button class="btn btn-secondary" id="btn-cal-next"><i data-lucide="chevron-right"></i></button>
         </div>
         <div class="legend" style="display:flex; gap:15px; font-size:0.8rem; color:var(--text-secondary);">
+          <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background-color:#eab308;margin-right:4px;"></span>Pending</span>
           <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background-color:#3b82f6;margin-right:4px;"></span>Scheduled</span>
           <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background-color:#10b981;margin-right:4px;"></span>Completed</span>
           <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background-color:#ef4444;margin-right:4px;"></span>Cancelled</span>
@@ -1248,6 +1470,7 @@ async function drawCalendar(date) {
 
     const apptBadges = dayAppts.map(a => {
       let color = '#3b82f6'; // Scheduled default
+      if (a.status === 'pending') color = '#eab308';
       if (a.status === 'completed') color = '#10b981';
       if (a.status === 'cancelled') color = '#ef4444';
       if (a.status === 'no-show') color = '#f59e0b';
@@ -1395,7 +1618,8 @@ async function openEditApptModal(apptId) {
           <div class="form-group">
             <label>Update Status</label>
             <select id="edit-appt-status">
-              <option value="scheduled" ${a.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+              <option value="pending" ${a.status === 'pending' ? 'selected' : ''}>Pending Approval</option>
+              <option value="scheduled" ${a.status === 'scheduled' ? 'selected' : ''}>Scheduled / Accepted</option>
               <option value="completed" ${a.status === 'completed' ? 'selected' : ''}>Completed</option>
               <option value="cancelled" ${a.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
               <option value="no-show" ${a.status === 'no-show' ? 'selected' : ''}>No-Show</option>
@@ -2062,6 +2286,1162 @@ async function renderPatientRecordsPortal(container) {
     </div>
   `;
   lucide.createIcons();
+}
+
+// ==========================================================================
+// 7. USER & ROLE MANAGEMENT VIEW (ADMIN ONLY)
+// ==========================================================================
+async function renderUsersView(container) {
+  container.innerHTML = `
+    <div class="view-header-actions">
+      <div class="search-input-wrapper">
+        <i data-lucide="search"></i>
+        <input type="text" id="user-search" placeholder="Search by name, email, or role...">
+      </div>
+      <button class="btn btn-primary" id="btn-add-user"><i data-lucide="user-plus"></i>Add User Account</button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>User Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Specialization/License</th>
+              <th>Date Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr><td colspan="7" style="text-align:center;">Loading user accounts...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Bind events
+  const searchInput = document.getElementById('user-search');
+  searchInput.addEventListener('input', debounce(() => fetchUsersList(searchInput.value), 300));
+  
+  document.getElementById('btn-add-user').addEventListener('click', openAddUserModal);
+
+  // Initial load
+  await fetchUsersList();
+}
+
+async function fetchUsersList(query = '') {
+  try {
+    const res = await fetch('/api/users');
+    if (!res.ok) throw new Error('Failed to load user accounts.');
+    let users = await res.json();
+
+    if (query) {
+      const q = query.toLowerCase();
+      users = users.filter(u => 
+        (u.first_name && u.first_name.toLowerCase().includes(q)) ||
+        (u.last_name && u.last_name.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q)) ||
+        (u.specialization && u.specialization.toLowerCase().includes(q))
+      );
+    }
+
+    const tbody = document.getElementById('users-table-body');
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No user accounts found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => {
+      const roleBadge = u.role === 'admin' ? 'danger' : (u.role === 'dentist' ? 'primary' : (u.role === 'staff' ? 'warning' : 'success'));
+      const specializationText = u.role === 'dentist' 
+        ? `<strong>${u.specialization || 'General'}</strong><br><span style="font-size: 0.75rem; color: var(--text-muted);">${u.license_number || 'N/A'}</span>`
+        : '<span style="color: var(--text-muted);">—</span>';
+      
+      const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+
+      // Safe JSON serialization for onclick handler
+      const userJson = JSON.stringify(u).replace(/"/g, '&quot;');
+
+      return `
+        <tr>
+          <td><strong>${u.first_name} ${u.last_name}</strong></td>
+          <td>${u.email}</td>
+          <td>${u.phone || 'N/A'}</td>
+          <td><span class="badge ${roleBadge}">${u.role.toUpperCase()}</span></td>
+          <td>${specializationText}</td>
+          <td>${dateStr}</td>
+          <td>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary btn-icon" onclick="openEditUserModalByData('${userJson}')" title="Edit User">
+                <i data-lucide="edit-3" style="width:16px;height:16px;"></i>
+              </button>
+              <button class="btn btn-secondary btn-icon danger" onclick="deleteUserAccount(${u.id}, '${u.email}')" title="Delete User">
+                <i data-lucide="trash-2" style="width:16px;height:16px;color:var(--danger-color);"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    lucide.createIcons();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Global scope helpers for onclick handlers
+window.openEditUserModalByData = function(userJsonStr) {
+  const user = JSON.parse(userJsonStr.replace(/&quot;/g, '"'));
+  openEditUserModal(user);
+};
+
+window.deleteUserAccount = async function(userId, email) {
+  if (confirm(`Are you sure you want to delete the user account for ${email}?`)) {
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'User account deleted successfully.', 'success');
+        await fetchUsersList();
+      } else {
+        showToast(data.error || 'Failed to delete user account.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error deleting user.', 'danger');
+    }
+  }
+};
+
+function openAddUserModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Create User Account</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-user-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name*</label>
+              <input type="text" id="u-first-name" required placeholder="Jane">
+            </div>
+            <div class="form-group">
+              <label>Last Name*</label>
+              <input type="text" id="u-last-name" required placeholder="Smith">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email Address*</label>
+              <input type="email" id="u-email" required placeholder="jane.smith@dental.com">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="u-phone" placeholder="555-0188">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role*</label>
+              <select id="u-role" required>
+                <option value="staff">Staff / Receptionist</option>
+                <option value="dentist">Dentist</option>
+                <option value="admin">Administrator</option>
+                <option value="patient">Patient</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Password*</label>
+              <input type="password" id="u-password" required placeholder="••••••••">
+            </div>
+          </div>
+          
+          <!-- Dentist specific fields -->
+          <div id="dentist-fields" class="hidden" style="border-top:1px dashed var(--border-color); padding-top:16px; margin-top:16px;">
+            <p style="font-size:0.8rem; font-weight:600; color:#4f46e5; margin-bottom:12px;">Dentist Professional Profile</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Specialization</label>
+                <input type="text" id="u-specialization" placeholder="e.g. Orthodontics, Cosmetic">
+              </div>
+              <div class="form-group">
+                <label>License Number</label>
+                <input type="text" id="u-license" placeholder="e.g. LIC-998877">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Calendar Color Identifier</label>
+              <input type="color" id="u-color" value="#4f46e5" style="height:40px; padding:0; cursor:pointer;">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  // Watch role selection to display dentist profile fields
+  const roleSelect = document.getElementById('u-role');
+  const dentistFields = document.getElementById('dentist-fields');
+  roleSelect.addEventListener('change', () => {
+    if (roleSelect.value === 'dentist') {
+      dentistFields.classList.remove('hidden');
+    } else {
+      dentistFields.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      firstName: document.getElementById('u-first-name').value,
+      lastName: document.getElementById('u-last-name').value,
+      email: document.getElementById('u-email').value,
+      phone: document.getElementById('u-phone').value,
+      role: roleSelect.value,
+      password: document.getElementById('u-password').value,
+      specialization: document.getElementById('u-specialization').value,
+      licenseNumber: document.getElementById('u-license').value,
+      colorCode: document.getElementById('u-color').value
+    };
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('User account created successfully', 'success');
+        modal.remove();
+        await fetchUsersList();
+      } else {
+        showToast(data.error || 'Failed to create user account', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error creating user.', 'danger');
+    }
+  });
+}
+
+function openEditUserModal(user) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Edit User Account</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="edit-user-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name*</label>
+              <input type="text" id="ue-first-name" required value="${user.first_name}">
+            </div>
+            <div class="form-group">
+              <label>Last Name*</label>
+              <input type="text" id="ue-last-name" required value="${user.last_name}">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email Address*</label>
+              <input type="email" id="ue-email" required value="${user.email}">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="ue-phone" value="${user.phone || ''}">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role*</label>
+              <select id="ue-role" required>
+                <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Staff / Receptionist</option>
+                <option value="dentist" ${user.role === 'dentist' ? 'selected' : ''}>Dentist</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
+                <option value="patient" ${user.role === 'patient' ? 'selected' : ''}>Patient</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>New Password (Leave blank to keep current)</label>
+              <input type="password" id="ue-password" placeholder="••••••••">
+            </div>
+          </div>
+          
+          <!-- Dentist specific fields -->
+          <div id="dentist-fields-edit" class="${user.role === 'dentist' ? '' : 'hidden'}" style="border-top:1px dashed var(--border-color); padding-top:16px; margin-top:16px;">
+            <p style="font-size:0.8rem; font-weight:600; color:#4f46e5; margin-bottom:12px;">Dentist Professional Profile</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Specialization</label>
+                <input type="text" id="ue-specialization" value="${user.specialization || ''}" placeholder="e.g. Orthodontics, Cosmetic">
+              </div>
+              <div class="form-group">
+                <label>License Number</label>
+                <input type="text" id="ue-license" value="${user.license_number || ''}" placeholder="e.g. LIC-998877">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Calendar Color Identifier</label>
+              <input type="color" id="ue-color" value="${user.color_code || '#4f46e5'}" style="height:40px; padding:0; cursor:pointer;">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update User</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  const roleSelect = document.getElementById('ue-role');
+  const dentistFields = document.getElementById('dentist-fields-edit');
+  roleSelect.addEventListener('change', () => {
+    if (roleSelect.value === 'dentist') {
+      dentistFields.classList.remove('hidden');
+    } else {
+      dentistFields.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      firstName: document.getElementById('ue-first-name').value,
+      lastName: document.getElementById('ue-last-name').value,
+      email: document.getElementById('ue-email').value,
+      phone: document.getElementById('ue-phone').value,
+      role: roleSelect.value,
+      password: document.getElementById('ue-password').value || null,
+      specialization: document.getElementById('ue-specialization').value,
+      licenseNumber: document.getElementById('ue-license').value,
+      colorCode: document.getElementById('ue-color').value
+    };
+
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('User account updated successfully', 'success');
+        modal.remove();
+        await fetchUsersList();
+      } else {
+        showToast(data.error || 'Failed to update user account', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error updating user.', 'danger');
+    }
+  });
+}
+
+async function renderFollowupsView(container) {
+  const res = await fetch('/api/followups');
+  const followups = await res.json();
+
+  const pending = followups.filter(f => f.status === 'pending');
+  const completed = followups.filter(f => f.status === 'completed');
+
+  container.innerHTML = `
+    <div class="view-header-actions" style="margin-bottom:24px;">
+      <h3 style="font-size:1.4rem;">CRM Call Follow-up Tasks</h3>
+      <button class="btn btn-primary" id="btn-add-followup" style="display:flex; align-items:center; gap:6px;">
+        <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Add Task
+      </button>
+    </div>
+
+    <div class="grid-3-col" style="gap:24px; margin-bottom:24px;">
+      <div class="stat-card">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="stat-icon-container warning"><i data-lucide="clock"></i></div>
+          <div>
+            <span class="stat-label">Pending Contacts</span>
+            <span class="stat-value" style="font-size:1.6rem;">${pending.length}</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="stat-icon-container success"><i data-lucide="check-check"></i></div>
+          <div>
+            <span class="stat-label">Completed Contacts</span>
+            <span class="stat-value" style="font-size:1.6rem;">${completed.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h4 style="padding:20px; font-weight:600; border-bottom:1px solid var(--border-color);">Scheduled Call Log</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Contact Name</th>
+              <th>Type</th>
+              <th>Assigned To</th>
+              <th>Scheduled Date</th>
+              <th>Reason & Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${followups.length === 0 ? '<tr><td colspan="6" style="text-align:center;">No follow-up calls scheduled yet.</td></tr>' : followups.map(f => {
+              const name = f.patient_id ? `${f.pat_first} ${f.pat_last}` : `${f.lead_first} ${f.lead_last}`;
+              const type = f.patient_id ? '<span class="badge success">Patient</span>' : '<span class="badge primary">Lead</span>';
+              const isCompleted = f.status === 'completed';
+              return `
+                <tr>
+                  <td><strong>${name}</strong></td>
+                  <td>${type}</td>
+                  <td>Dr./Staff ${f.staff_first} ${f.staff_last}</td>
+                  <td>${new Date(f.scheduled_date).toLocaleDateString()}</td>
+                  <td>
+                    <span class="badge ${isCompleted ? 'success' : 'warning'}">${f.status}</span>
+                    <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">${f.notes || 'No description logged.'}</p>
+                  </td>
+                  <td>
+                    ${!isCompleted ? `
+                      <button class="btn btn-secondary btn-icon" onclick="completeFollowup(${f.id})" title="Mark Completed">
+                        <i data-lucide="check" style="width:14px;height:14px; color:var(--success-color);"></i>
+                      </button>
+                    ` : '<span style="color:var(--text-muted); font-size:0.85rem;">—</span>'}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Bind add mockup followup button
+  document.getElementById('btn-add-followup').addEventListener('click', () => openAddFollowupModal());
+  lucide.createIcons();
+}
+
+async function completeFollowup(id) {
+  try {
+    const res = await fetch(`/api/followups/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed', notes: 'Completed call outreach successfully.' })
+    });
+    if (res.ok) {
+      showToast('Outreach completed successfully', 'success');
+      const workspace = document.getElementById('workspace-view');
+      renderFollowupsView(workspace);
+    }
+  } catch (err) {
+    showToast('Failed to complete followup.', 'danger');
+  }
+}
+
+async function openAddFollowupModal() {
+  const res = await fetch('/api/patients');
+  const patients = await res.json();
+  const resLeads = await fetch('/api/leads');
+  const leads = await resLeads.json();
+  const resUsers = await fetch('/api/users');
+  const users = await resUsers.json();
+  const staff = users.filter(u => u.role === 'admin' || u.role === 'staff' || u.role === 'dentist');
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Schedule Follow-up Outreach</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-followup-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Select Patient OR Lead</label>
+            <select id="fl-target" required style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              <optgroup label="Patients">
+                ${patients.map(p => `<option value="patient:${p.id}">${p.first_name} ${p.last_name}</option>`).join('')}
+              </optgroup>
+              <optgroup label="Hot Leads">
+                ${leads.map(l => `<option value="lead:${l.id}">${l.first_name} ${l.last_name} (${l.phone})</option>`).join('')}
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Assign To (Staff/Doctor)</label>
+            <select id="fl-staff" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              ${staff.map(u => `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.role})</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Scheduled Date</label>
+            <input type="date" id="fl-date" required style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Call Outbound Notes</label>
+            <input type="text" id="fl-notes" placeholder="e.g. Call to check on bleeding after molar extraction" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Call</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('add-followup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const target = document.getElementById('fl-target').value;
+    const isPatient = target.startsWith('patient:');
+    const targetId = parseInt(target.split(':')[1], 10);
+    const assignedTo = document.getElementById('fl-staff').value;
+    const scheduledDate = document.getElementById('fl-date').value;
+    const notes = document.getElementById('fl-notes').value;
+
+    const payload = {
+      patientId: isPatient ? targetId : null,
+      leadId: !isPatient ? targetId : null,
+      assignedTo,
+      scheduledDate,
+      notes
+    };
+
+    try {
+      const res = await fetch('/api/followups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Follow-up scheduled successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderFollowupsView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error scheduling follow-up.', 'danger');
+    }
+  });
+}
+
+async function renderPrescriptionsView(container) {
+  const res = await fetch('/api/prescriptions');
+  const prescriptions = await res.json();
+
+  container.innerHTML = `
+    <div class="view-header-actions" style="margin-bottom:24px;">
+      <h3 style="font-size:1.4rem;">Prescription Hub</h3>
+      <button class="btn btn-primary" id="btn-write-prescription" style="display:flex; align-items:center; gap:6px;">
+        <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Write Prescription
+      </button>
+    </div>
+
+    <div class="table-card">
+      <h4 style="padding:20px; font-weight:600; border-bottom:1px solid var(--border-color);">Prescribed Medications Registry</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Prescribed By</th>
+              <th>Medication</th>
+              <th>Dosage</th>
+              <th>Usage Instructions</th>
+              <th>Date Prescribed</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${prescriptions.length === 0 ? '<tr><td colspan="7" style="text-align:center;">No prescriptions written yet.</td></tr>' : prescriptions.map(pr => `
+              <tr>
+                <td><strong>${pr.pat_first} ${pr.pat_last}</strong></td>
+                <td>Dr. ${pr.dent_first} ${pr.dent_last}</td>
+                <td><span style="font-weight:600; color:#4f46e5;">${pr.medication}</span></td>
+                <td>${pr.dosage}</td>
+                <td><span style="font-size:0.85rem; color:var(--text-secondary);">${pr.instructions || 'N/A'}</span></td>
+                <td>${new Date(pr.created_at).toLocaleDateString()}</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon" onclick="deletePrescription(${pr.id})" title="Delete/Revoke">
+                    <i data-lucide="trash-2" style="width:14px;height:14px; color:var(--danger-color);"></i>
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-write-prescription').addEventListener('click', () => openWritePrescriptionModal());
+  lucide.createIcons();
+}
+
+async function deletePrescription(id) {
+  if (!confirm('Are you sure you want to revoke/delete this prescription?')) return;
+  try {
+    const res = await fetch(`/api/prescriptions/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Prescription revoked successfully', 'success');
+      const workspace = document.getElementById('workspace-view');
+      renderPrescriptionsView(workspace);
+    }
+  } catch (err) {
+    showToast('Failed to revoke prescription.', 'danger');
+  }
+}
+
+async function openWritePrescriptionModal() {
+  const res = await fetch('/api/patients');
+  const patients = await res.json();
+  const resDentists = await fetch('/api/dentists');
+  const dentists = await resDentists.json();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Write New Prescription</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="write-prescription-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Select Patient*</label>
+            <select id="pr-patient" required style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              ${patients.map(p => `<option value="${p.id}">${p.first_name} ${p.last_name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Responsible Dentist*</label>
+            <select id="pr-dentist" required style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              ${dentists.map(d => `<option value="${d.id}">Dr. ${d.first_name} ${d.last_name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Medication Name*</label>
+            <input type="text" id="pr-medication" required placeholder="e.g. Amoxicillin 500mg, Ibuprofen 400mg" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Dosage</label>
+            <input type="text" id="pr-dosage" placeholder="e.g. 1 tablet 3 times a day" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Usage Directions</label>
+            <input type="text" id="pr-instructions" placeholder="e.g. Take with water after food for 7 days" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Issue</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('write-prescription-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      patientId: document.getElementById('pr-patient').value,
+      dentistId: document.getElementById('pr-dentist').value,
+      medication: document.getElementById('pr-medication').value,
+      dosage: document.getElementById('pr-dosage').value,
+      instructions: document.getElementById('pr-instructions').value
+    };
+
+    try {
+      const res = await fetch('/api/prescriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Prescription recorded successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderPrescriptionsView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error prescribing medication.', 'danger');
+    }
+  });
+}
+
+async function renderPackagesView(container) {
+  const res = await fetch('/api/treatments');
+  const treatments = await res.json();
+
+  container.innerHTML = `
+    <div class="view-header-actions" style="margin-bottom:24px;">
+      <h3 style="font-size:1.4rem;">Packages & Service Catalog</h3>
+      ${state.user.role === 'admin' ? `
+        <button class="btn btn-primary" id="btn-add-service" style="display:flex; align-items:center; gap:6px;">
+          <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Add Procedure/Package
+        </button>
+      ` : ''}
+    </div>
+
+    <div class="table-card">
+      <h4 style="padding:20px; font-weight:600; border-bottom:1px solid var(--border-color);">Clinic Services Directory</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Procedure/Package Name</th>
+              <th>Clinical Description</th>
+              <th>Base Charge Cost</th>
+              ${state.user.role === 'admin' ? '<th>Catalog Controls</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${treatments.length === 0 ? '<tr><td colspan="4" style="text-align:center;">No services loaded.</td></tr>' : treatments.map(t => `
+              <tr>
+                <td><strong>${t.name}</strong></td>
+                <td><span style="font-size:0.85rem; color:var(--text-secondary);">${t.description || 'No description logged.'}</span></td>
+                <td><strong style="color:#059669;">$${t.base_cost.toFixed(2)}</strong></td>
+                ${state.user.role === 'admin' ? `
+                  <td>
+                    <button class="btn btn-secondary btn-icon" onclick="openEditServiceModal(${t.id}, '${t.name.replace(/'/g, "\\'")}', '${(t.description || '').replace(/'/g, "\\'")}', ${t.base_cost})" title="Edit Service">
+                      <i data-lucide="edit-3" style="width:14px;height:14px; color:var(--primary-color);"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="deleteService(${t.id})" title="Delete Service">
+                      <i data-lucide="trash-2" style="width:14px;height:14px; color:var(--danger-color);"></i>
+                    </button>
+                  </td>
+                ` : ''}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  if (state.user.role === 'admin') {
+    document.getElementById('btn-add-service').addEventListener('click', () => openAddServiceModal());
+  }
+  lucide.createIcons();
+}
+
+async function deleteService(id) {
+  if (!confirm('Are you sure you want to remove this procedure from the catalog? This could impact existing plan drafts.')) return;
+  try {
+    const res = await fetch(`/api/treatments/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Catalog item removed successfully', 'success');
+      const workspace = document.getElementById('workspace-view');
+      renderPackagesView(workspace);
+    }
+  } catch (err) {
+    showToast('Failed to delete catalog item.', 'danger');
+  }
+}
+
+function openAddServiceModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Add Service to Catalog</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-service-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Service/Procedure Name*</label>
+            <input type="text" id="srv-name" required placeholder="e.g. Dental Scaling & Polish" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Base Charge Cost ($)*</label>
+            <input type="number" id="srv-cost" required step="0.01" placeholder="e.g. 150.00" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Service Description</label>
+            <textarea id="srv-desc" rows="4" placeholder="Clinical specifics, duration, and warranty guidelines..." style="width:100%; font-family:inherit; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Service</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('add-service-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById('srv-name').value,
+      baseCost: parseFloat(document.getElementById('srv-cost').value),
+      description: document.getElementById('srv-desc').value
+    };
+
+    try {
+      const res = await fetch('/api/treatments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Service added to catalog successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderPackagesView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error adding service to catalog.', 'danger');
+    }
+  });
+}
+
+function openEditServiceModal(id, name, desc, cost) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Edit Service Item</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="edit-service-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Service/Procedure Name*</label>
+            <input type="text" id="edit-srv-name" required value="${name}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Base Charge Cost ($)*</label>
+            <input type="number" id="edit-srv-cost" required step="0.01" value="${cost}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Service Description</label>
+            <textarea id="edit-srv-desc" rows="4" style="width:100%; font-family:inherit; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);">${desc}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Catalog</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('edit-service-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById('edit-srv-name').value,
+      baseCost: parseFloat(document.getElementById('edit-srv-cost').value),
+      description: document.getElementById('edit-srv-desc').value
+    };
+
+    try {
+      const res = await fetch(`/api/treatments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Service updated successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderPackagesView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error updating catalog item.', 'danger');
+    }
+  });
+}
+
+async function renderStockView(container) {
+  const res = await fetch('/api/stock');
+  const stock = await res.json();
+
+  const lowStock = stock.filter(item => item.quantity <= item.reorder_level);
+
+  container.innerHTML = `
+    <div class="view-header-actions" style="margin-bottom:24px;">
+      <h3 style="font-size:1.4rem;">Medical Stock & Inventory</h3>
+      ${state.user.role !== 'dentist' ? `
+        <button class="btn btn-primary" id="btn-add-stock-item" style="display:flex; align-items:center; gap:6px;">
+          <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>Add Stock Item
+        </button>
+      ` : ''}
+    </div>
+
+    <div class="grid-3-col" style="gap:24px; margin-bottom:24px;">
+      <div class="stat-card">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="stat-icon-container primary"><i data-lucide="package-open"></i></div>
+          <div>
+            <span class="stat-label">Total Unique Items</span>
+            <span class="stat-value" style="font-size:1.6rem;">${stock.length}</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="${lowStock.length > 0 ? 'border:1px solid var(--danger-color); background:rgba(239, 68, 68, 0.03);' : ''}">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="stat-icon-container danger"><i data-lucide="alert-triangle"></i></div>
+          <div>
+            <span class="stat-label">Low Stock Alerts</span>
+            <span class="stat-value" style="font-size:1.6rem; color:var(--danger-color);">${lowStock.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h4 style="padding:20px; font-weight:600; border-bottom:1px solid var(--border-color);">Clinic Supplies Tracker</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Reorder Limit</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+              ${state.user.role !== 'dentist' ? '<th>Inventory Controls</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${stock.length === 0 ? '<tr><td colspan="7" style="text-align:center;">No stock records found.</td></tr>' : stock.map(s => {
+              const isLow = s.quantity <= s.reorder_level;
+              return `
+                <tr>
+                  <td><strong>${s.item_name}</strong></td>
+                  <td><span class="badge primary">${s.category}</span></td>
+                  <td><strong style="font-size:1.05rem;">${s.quantity} ${s.unit}</strong></td>
+                  <td>${s.reorder_level} ${s.unit}</td>
+                  <td>
+                    ${isLow ? '<span class="badge danger" style="animation: pulse 2s infinite;">LOW STOCK</span>' : '<span class="badge success">Adequate</span>'}
+                  </td>
+                  <td>${new Date(s.last_updated).toLocaleDateString()}</td>
+                  ${state.user.role !== 'dentist' ? `
+                    <td>
+                      <button class="btn btn-secondary btn-icon" onclick="openEditStockModal(${s.id}, '${s.item_name.replace(/'/g, "\\'")}', '${s.category}', ${s.quantity}, '${s.unit}', ${s.reorder_level})" title="Update Levels">
+                        <i data-lucide="refresh-cw" style="width:14px;height:14px; color:var(--primary-color);"></i>
+                      </button>
+                      <button class="btn btn-secondary btn-icon" onclick="deleteStockItem(${s.id})" title="Remove Item">
+                        <i data-lucide="trash-2" style="width:14px;height:14px; color:var(--danger-color);"></i>
+                      </button>
+                    </td>
+                  ` : ''}
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  if (state.user.role !== 'dentist') {
+    document.getElementById('btn-add-stock-item').addEventListener('click', () => openAddStockModal());
+  }
+  lucide.createIcons();
+}
+
+async function deleteStockItem(id) {
+  if (!confirm('Are you sure you want to remove this item from the inventory registry?')) return;
+  try {
+    const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Inventory item removed successfully', 'success');
+      const workspace = document.getElementById('workspace-view');
+      renderStockView(workspace);
+    }
+  } catch (err) {
+    showToast('Failed to delete inventory item.', 'danger');
+  }
+}
+
+function openAddStockModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Add Item to Inventory</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-stock-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Item Name*</label>
+            <input type="text" id="st-name" required placeholder="e.g. Latex Examination Gloves (M)" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="st-cat" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              <option value="Consumables">Consumables (Gloves, Syringes)</option>
+              <option value="Drugs">Drugs (Anesthetics, Gels)</option>
+              <option value="Instruments">Instruments (Handles, Burs)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Current Quantity*</label>
+              <input type="number" id="st-qty" required value="10" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+            </div>
+            <div class="form-group">
+              <label>Unit Label</label>
+              <input type="text" id="st-unit" value="pcs" placeholder="e.g. boxes, packs, pcs" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Low Stock Reorder Limit*</label>
+            <input type="number" id="st-limit" required value="5" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Item</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('add-stock-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      itemName: document.getElementById('st-name').value,
+      category: document.getElementById('st-cat').value,
+      quantity: parseInt(document.getElementById('st-qty').value, 10),
+      unit: document.getElementById('st-unit').value,
+      reorderLevel: parseInt(document.getElementById('st-limit').value, 10)
+    };
+
+    try {
+      const res = await fetch('/api/stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Inventory item added successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderStockView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error adding stock item.', 'danger');
+    }
+  });
+}
+
+function openEditStockModal(id, name, cat, qty, unit, limit) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container" style="width:500px;">
+      <div class="modal-header">
+        <h3>Update Stock Levels</h3>
+        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="edit-stock-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Item Name*</label>
+            <input type="text" id="edit-st-name" required value="${name}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="edit-st-cat" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+              <option value="Consumables" ${cat === 'Consumables' ? 'selected' : ''}>Consumables (Gloves, Syringes)</option>
+              <option value="Drugs" ${cat === 'Drugs' ? 'selected' : ''}>Drugs (Anesthetics, Gels)</option>
+              <option value="Instruments" ${cat === 'Instruments' ? 'selected' : ''}>Instruments (Handles, Burs)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Current Quantity*</label>
+              <input type="number" id="edit-st-qty" required value="${qty}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+            </div>
+            <div class="form-group">
+              <label>Unit Label</label>
+              <input type="text" id="edit-st-unit" value="${unit}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Low Stock Reorder Limit*</label>
+            <input type="number" id="edit-st-limit" required value="${limit}" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Item</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+
+  document.getElementById('edit-stock-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      itemName: document.getElementById('edit-st-name').value,
+      category: document.getElementById('edit-st-cat').value,
+      quantity: parseInt(document.getElementById('edit-st-qty').value, 10),
+      unit: document.getElementById('edit-st-unit').value,
+      reorderLevel: parseInt(document.getElementById('edit-st-limit').value, 10)
+    };
+
+    try {
+      const res = await fetch(`/api/stock/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showToast('Stock level updated successfully', 'success');
+        modal.remove();
+        const workspace = document.getElementById('workspace-view');
+        renderStockView(workspace);
+      }
+    } catch (err) {
+      showToast('Network error updating stock item.', 'danger');
+    }
+  });
 }
 
 // ==========================================================================

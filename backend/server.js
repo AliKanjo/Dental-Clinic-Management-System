@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
@@ -61,6 +62,11 @@ app.post('/api/auth/register', async (req, res) => {
       await dbHelper.run(
         `INSERT INTO patients (user_id, first_name, last_name, email, phone) VALUES (?, ?, ?, ?, ?)`,
         [result.id, firstName, lastName, email, phone]
+      );
+    } else if (role === 'dentist') {
+      await dbHelper.run(
+        `INSERT INTO dentists (user_id, specialization, license_number, color_code) VALUES (?, 'General Dentistry', 'LIC-TBD', '#3b82f6')`,
+        [result.id]
       );
     }
 
@@ -318,9 +324,10 @@ app.post('/api/appointments', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'The dentist has a scheduling conflict at this time.' });
     }
 
+    const initialStatus = req.user.role === 'patient' ? 'pending' : 'scheduled';
     const result = await dbHelper.run(
-      `INSERT INTO appointments (patient_id, dentist_id, start_time, end_time, status, notes) VALUES (?, ?, ?, ?, 'scheduled', ?)`,
-      [finalPatientId, dentistId, startTime, endTime, notes]
+      `INSERT INTO appointments (patient_id, dentist_id, start_time, end_time, status, notes) VALUES (?, ?, ?, ?, ?, ?)`,
+      [finalPatientId, dentistId, startTime, endTime, initialStatus, notes]
     );
 
     res.status(201).json({ id: result.id, message: 'Appointment booked successfully.' });
@@ -641,12 +648,324 @@ app.put('/api/followups/:id', authenticateToken, requireRole(['admin', 'staff'])
   }
 });
 
+// --- Prescriptions Routes ---
+app.get('/api/prescriptions', authenticateToken, async (req, res) => {
+  try {
+    const list = await dbHelper.query(
+      `SELECT pr.*, 
+              p.first_name AS pat_first, p.last_name AS pat_last,
+              u.first_name AS dent_first, u.last_name AS dent_last
+       FROM prescriptions pr
+       JOIN patients p ON pr.patient_id = p.id
+       JOIN dentists d ON pr.dentist_id = d.id
+       JOIN users u ON d.user_id = u.id
+       ORDER BY pr.created_at DESC`
+    );
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/prescriptions', authenticateToken, requireRole(['admin', 'dentist']), async (req, res) => {
+  const { patientId, dentistId, medication, dosage, instructions } = req.body;
+  if (!patientId || !dentistId || !medication) {
+    return res.status(400).json({ error: 'Patient, dentist, and medication are required.' });
+  }
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO prescriptions (patient_id, dentist_id, medication, dosage, instructions, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      [patientId, dentistId, medication, dosage || '', instructions || '', new Date().toISOString()]
+    );
+    res.status(201).json({ id: result.id, message: 'Prescription written successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/prescriptions/:id', authenticateToken, requireRole(['admin', 'dentist']), async (req, res) => {
+  try {
+    await dbHelper.run(`DELETE FROM prescriptions WHERE id = ?`, [req.params.id]);
+    res.json({ message: 'Prescription deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Treatments Catalog (Service Packages) Routes ---
+app.post('/api/treatments', authenticateToken, requireRole(['admin', 'staff']), async (req, res) => {
+  const { name, description, baseCost } = req.body;
+  if (!name || baseCost === undefined) {
+    return res.status(400).json({ error: 'Treatment name and base cost are required.' });
+  }
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO treatments (name, description, base_cost) VALUES (?, ?, ?)`,
+      [name, description || '', baseCost]
+    );
+    res.status(201).json({ id: result.id, message: 'Service added to catalog.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/treatments/:id', authenticateToken, requireRole(['admin', 'staff']), async (req, res) => {
+  const { name, description, baseCost } = req.body;
+  if (!name || baseCost === undefined) {
+    return res.status(400).json({ error: 'Treatment name and base cost are required.' });
+  }
+  try {
+    await dbHelper.run(
+      `UPDATE treatments SET name = ?, description = ?, base_cost = ? WHERE id = ?`,
+      [name, description || '', baseCost, req.params.id]
+    );
+    res.json({ message: 'Service updated successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/treatments/:id', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    await dbHelper.run(`DELETE FROM treatments WHERE id = ?`, [req.params.id]);
+    res.json({ message: 'Service removed from catalog.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Medical Stock Inventory Routes ---
+app.get('/api/stock', authenticateToken, requireRole(['admin', 'staff', 'dentist']), async (req, res) => {
+  try {
+    const list = await dbHelper.query(`SELECT * FROM stock ORDER BY item_name ASC`);
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/stock', authenticateToken, requireRole(['admin', 'staff']), async (req, res) => {
+  const { itemName, category, quantity, unit, reorderLevel } = req.body;
+  if (!itemName || quantity === undefined) {
+    return res.status(400).json({ error: 'Item name and quantity are required.' });
+  }
+  try {
+    const result = await dbHelper.run(
+      `INSERT INTO stock (item_name, category, quantity, unit, reorder_level, last_updated) VALUES (?, ?, ?, ?, ?, ?)`,
+      [itemName, category || 'Consumables', quantity, unit || 'pcs', reorderLevel || 10, new Date().toISOString()]
+    );
+    res.status(201).json({ id: result.id, message: 'Stock item added.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/stock/:id', authenticateToken, requireRole(['admin', 'staff', 'dentist']), async (req, res) => {
+  const { itemName, category, quantity, unit, reorderLevel } = req.body;
+  if (!itemName || quantity === undefined) {
+    return res.status(400).json({ error: 'Item name and quantity are required.' });
+  }
+  try {
+    await dbHelper.run(
+      `UPDATE stock SET item_name = ?, category = ?, quantity = ?, unit = ?, reorder_level = ?, last_updated = ? WHERE id = ?`,
+      [itemName, category || 'Consumables', quantity, unit || 'pcs', reorderLevel || 10, new Date().toISOString(), req.params.id]
+    );
+    res.json({ message: 'Stock level updated.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/stock/:id', authenticateToken, requireRole(['admin', 'staff']), async (req, res) => {
+  try {
+    await dbHelper.run(`DELETE FROM stock WHERE id = ?`, [req.params.id]);
+    res.json({ message: 'Stock item removed.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- User Management Routes (Admin Only) ---
+app.get('/api/users', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    const users = await dbHelper.query(
+      `SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.phone, u.created_at,
+              d.specialization, d.license_number, d.color_code
+       FROM users u
+       LEFT JOIN dentists d ON u.id = d.user_id
+       ORDER BY u.role, u.last_name, u.first_name`
+    );
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/users', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const { email, password, role, firstName, lastName, phone, specialization, licenseNumber, colorCode } = req.body;
+  if (!email || !password || !role || !firstName || !lastName) {
+    return res.status(400).json({ error: 'All mandatory fields (email, password, role, first name, last name) are required.' });
+  }
+
+  try {
+    const existing = await dbHelper.get('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing) return res.status(400).json({ error: 'Email already registered.' });
+
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+
+    const result = await dbHelper.run(
+      `INSERT INTO users (email, password_hash, role, first_name, last_name, phone, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [email, hash, role, firstName, lastName, phone, new Date().toISOString()]
+    );
+
+    const newUserId = result.id;
+
+    if (role === 'dentist') {
+      await dbHelper.run(
+        `INSERT INTO dentists (user_id, specialization, license_number, color_code) VALUES (?, ?, ?, ?)`,
+        [newUserId, specialization || 'General Dentistry', licenseNumber || '', colorCode || '#4f46e5']
+      );
+    } else if (role === 'patient') {
+      await dbHelper.run(
+        `INSERT INTO patients (user_id, first_name, last_name, email, phone, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        [newUserId, firstName, lastName, email, phone, new Date().toISOString()]
+      );
+    }
+
+    res.status(201).json({ id: newUserId, message: 'User account created successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/users/:id', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const userId = req.params.id;
+  const { email, password, role, firstName, lastName, phone, specialization, licenseNumber, colorCode } = req.body;
+
+  if (!email || !role || !firstName || !lastName) {
+    return res.status(400).json({ error: 'Email, role, first name, and last name are required.' });
+  }
+
+  try {
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    // Check email uniqueness if email has changed
+    if (email !== user.email) {
+      const existing = await dbHelper.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
+      if (existing) return res.status(400).json({ error: 'Email already registered to another user.' });
+    }
+
+    const prevRole = user.role;
+
+    // Update main user record
+    if (password && password.trim() !== '') {
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
+      await dbHelper.run(
+        `UPDATE users SET email = ?, password_hash = ?, role = ?, first_name = ?, last_name = ?, phone = ? WHERE id = ?`,
+        [email, hash, role, firstName, lastName, phone, userId]
+      );
+    } else {
+      await dbHelper.run(
+        `UPDATE users SET email = ?, role = ?, first_name = ?, last_name = ?, phone = ? WHERE id = ?`,
+        [email, role, firstName, lastName, phone, userId]
+      );
+    }
+
+    // Role record lifecycle management
+    if (prevRole !== role) {
+      // Clean up previous role mappings
+      if (prevRole === 'dentist') {
+        await dbHelper.run('DELETE FROM dentists WHERE user_id = ?', [userId]);
+      } else if (prevRole === 'patient') {
+        await dbHelper.run('UPDATE patients SET user_id = NULL WHERE user_id = ?', [userId]);
+      }
+
+      // Add new role mappings
+      if (role === 'dentist') {
+        await dbHelper.run(
+          `INSERT INTO dentists (user_id, specialization, license_number, color_code) VALUES (?, ?, ?, ?)`,
+          [userId, specialization || 'General Dentistry', licenseNumber || '', colorCode || '#4f46e5']
+        );
+      } else if (role === 'patient') {
+        // Check if there is an existing patient record with the same email
+        const existingPat = await dbHelper.get('SELECT id FROM patients WHERE email = ?', [email]);
+        if (existingPat) {
+          await dbHelper.run('UPDATE patients SET user_id = ? WHERE id = ?', [userId, existingPat.id]);
+        } else {
+          await dbHelper.run(
+            `INSERT INTO patients (user_id, first_name, last_name, email, phone, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+            [userId, firstName, lastName, email, phone, new Date().toISOString()]
+          );
+        }
+      }
+    } else {
+      // Update existing role details
+      if (role === 'dentist') {
+        const hasDentist = await dbHelper.get('SELECT id FROM dentists WHERE user_id = ?', [userId]);
+        if (hasDentist) {
+          await dbHelper.run(
+            `UPDATE dentists SET specialization = ?, license_number = ?, color_code = ? WHERE user_id = ?`,
+            [specialization || 'General Dentistry', licenseNumber || '', colorCode || '#4f46e5', userId]
+          );
+        } else {
+          await dbHelper.run(
+            `INSERT INTO dentists (user_id, specialization, license_number, color_code) VALUES (?, ?, ?, ?)`,
+            [userId, specialization || 'General Dentistry', licenseNumber || '', colorCode || '#4f46e5']
+          );
+        }
+      } else if (role === 'patient') {
+        const hasPatient = await dbHelper.get('SELECT id FROM patients WHERE user_id = ?', [userId]);
+        if (hasPatient) {
+          await dbHelper.run(
+            `UPDATE patients SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE user_id = ?`,
+            [firstName, lastName, email, phone, userId]
+          );
+        }
+      }
+    }
+
+    res.json({ message: 'User updated successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/users/:id', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const userId = req.params.id;
+
+  if (String(req.user.id) === String(userId)) {
+    return res.status(400).json({ error: 'You cannot delete your own active admin account.' });
+  }
+
+  try {
+    const user = await dbHelper.get('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    // Clean up role references
+    if (user.role === 'dentist') {
+      await dbHelper.run('DELETE FROM dentists WHERE user_id = ?', [userId]);
+    } else if (user.role === 'patient') {
+      await dbHelper.run('UPDATE patients SET user_id = NULL WHERE user_id = ?', [userId]);
+    }
+
+    // Delete base user record
+    await dbHelper.run('DELETE FROM users WHERE id = ?', [userId]);
+
+    res.json({ message: 'User account deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Business Dashboard Statistics Route ---
 app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentist', 'staff']), async (req, res) => {
   try {
     // 1. Core aggregates
-    const apptsCount = await dbHelper.get("SELECT COUNT(*) AS total FROM appointments WHERE status = 'scheduled'");
-    const patientsCount = await dbHelper.get("SELECT COUNT(*) AS total FROM patients");
+    const apptsCount = await dbHelper.get("SELECT COUNT(*) AS [total] FROM appointments WHERE status = 'scheduled'");
+    const patientsCount = await dbHelper.get("SELECT COUNT(*) AS [total] FROM patients");
     
     // Financials
     const billingStats = await dbHelper.get(`
@@ -658,20 +977,20 @@ app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentis
 
     // 2. Calendar distribution (Appointments per status)
     const apptStatusStats = await dbHelper.query(
-      `SELECT status, COUNT(*) AS count FROM appointments GROUP BY status`
+      `SELECT status, COUNT(*) AS [count] FROM appointments GROUP BY status`
     );
 
     // 3. Treatment popularity
     const treatmentPopularity = await dbHelper.query(`
-      SELECT t.name, COUNT(*) AS count 
+      SELECT t.name, COUNT(*) AS [count] 
       FROM treatment_plan_items tpi
       JOIN treatments t ON tpi.treatment_id = t.id
-      GROUP BY t.id ORDER BY count DESC LIMIT 5
+      GROUP BY t.id ORDER BY [count] DESC LIMIT 5
     `);
 
     // 4. Monthly earnings distribution (last 6 months)
     const monthlyEarnings = await dbHelper.query(`
-      SELECT strftime('%Y-%m', created_at) AS month, SUM(amount) AS total
+      SELECT strftime('%Y-%m', created_at) AS month, SUM(amount) AS [total]
       FROM payments
       GROUP BY month ORDER BY month DESC LIMIT 6
     `);
@@ -688,6 +1007,155 @@ app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentis
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// --- AI Smart Assistant Routes ---
+app.post('/api/ai/suggest-plan', authenticateToken, requireRole(['admin', 'dentist']), async (req, res) => {
+  const { symptoms } = req.body;
+  if (!symptoms || symptoms.trim() === '') {
+    return res.status(400).json({ error: 'Symptoms or care description required.' });
+  }
+
+  if (process.env.NODE_ENV === 'test') {
+    return res.json([
+      {
+        treatmentId: 2,
+        toothNumber: '14',
+        notes: 'AI Mock: Cavity composite restoration suggested.',
+        cost: 150
+      }
+    ]);
+  }
+
+  const apiKey = process.env.AISA_API_KEY;
+  const baseUrl = process.env.AISA_BASE_URL || 'https://api.aisa.one/v1';
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'AIsa API key not configured on backend.' });
+  }
+
+  try {
+    // Fetch available treatments catalog dynamically
+    const treatments = await dbHelper.query('SELECT * FROM treatments ORDER BY name ASC');
+
+    const systemPrompt = `You are a professional dental care plan assistant.
+Your task is to analyze the patient's symptoms or needs and suggest a structured dental treatment plan.
+You must ONLY choose treatments from the following clinic catalog:
+${JSON.stringify(treatments)}
+
+For each suggested treatment item, specify:
+1. The "treatmentId" matching the catalog item.
+2. The "toothNumber" (1-32 for adult teeth, or "All" or a comma-separated list if multiple, or empty if general).
+3. Short clinical "notes" justifying the choice.
+4. The "cost" (should match the catalog's base_cost unless there is a reason to adjust it).
+
+Respond ONLY with a valid JSON array of objects, containing:
+[
+  {
+    "treatmentId": number,
+    "toothNumber": "string",
+    "notes": "string",
+    "cost": number
+  }
+]
+Do not include any markdown styling, triple backticks, or explanatory text. Just the raw JSON array.`;
+
+    const aiRes = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: symptoms }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    const aiData = await aiRes.json();
+    if (!aiRes.ok) {
+      throw new Error(aiData.error?.message || `AIsa API error: ${aiRes.statusText}`);
+    }
+
+    let completionText = aiData.choices[0].message.content.trim();
+    if (completionText.startsWith('```')) {
+      completionText = completionText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    }
+
+    const suggestions = JSON.parse(completionText);
+    res.json(suggestions);
+  } catch (err) {
+    res.status(500).json({ error: `AI Assist Failed: ${err.message}` });
+  }
+});
+
+app.post('/api/ai/optimize-notes', authenticateToken, requireRole(['admin', 'dentist', 'staff']), async (req, res) => {
+  const { notes } = req.body;
+  if (!notes || notes.trim() === '') {
+    return res.status(400).json({ error: 'Clinical notes are required.' });
+  }
+
+  if (process.env.NODE_ENV === 'test') {
+    return res.json({
+      formattedNotes: '<p>AI Mock: Chief complaint of toothache.</p>',
+      allergies: 'Penicillin'
+    });
+  }
+
+  const apiKey = process.env.AISA_API_KEY;
+  const baseUrl = process.env.AISA_BASE_URL || 'https://api.aisa.one/v1';
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'AIsa API key not configured on backend.' });
+  }
+
+  try {
+    const systemPrompt = `You are a clinical dental records optimizer.
+Your task is to take raw, messy clinical diagnostic notes inputted by the dentist, clean up spelling and grammar, and format them into a professional structure (e.g. Chief Complaint, Findings, Diagnosis).
+Also, detect and extract any medical or drug allergies mentioned in the notes.
+
+Respond ONLY with a valid JSON object matching the following schema:
+{
+  "formattedNotes": "string (formatted with HTML paragraphs/bullets, clean and professional)",
+  "allergies": "string (comma-separated list of identified drug or medical allergies, or 'None' if none found)"
+}
+Do not include any markdown styling (like triple backticks or \`\`\`json) or chat explanations. Just raw JSON output.`;
+
+    const aiRes = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: notes }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    const aiData = await aiRes.json();
+    if (!aiRes.ok) {
+      throw new Error(aiData.error?.message || `AIsa API error: ${aiRes.statusText}`);
+    }
+
+    let completionText = aiData.choices[0].message.content.trim();
+    if (completionText.startsWith('```')) {
+      completionText = completionText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    }
+
+    const resultObj = JSON.parse(completionText);
+    res.json(resultObj);
+  } catch (err) {
+    res.status(500).json({ error: `AI Optimize Failed: ${err.message}` });
   }
 });
 
