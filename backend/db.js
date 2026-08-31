@@ -21,7 +21,7 @@ function saveToDisk() {
   const tables = [
     'users', 'dentists', 'patients', 'appointments', 'treatments',
     'treatment_plans', 'treatment_plan_items', 'invoices', 'payments',
-    'leads', 'follow_ups', 'prescriptions', 'stock'
+    'leads', 'follow_ups', 'prescriptions', 'stock', 'dentist_availability'
   ];
   const data = {};
   tables.forEach(t => {
@@ -43,7 +43,8 @@ const tableDefinitions = {
   leads: `CREATE TABLE leads (id INT IDENTITY, first_name STRING, last_name STRING, email STRING, phone STRING, source STRING, status STRING, created_at STRING)`,
   follow_ups: `CREATE TABLE follow_ups (id INT IDENTITY, patient_id INT, lead_id INT, assigned_to INT, scheduled_date STRING, notes STRING, status STRING, completed_at STRING)`,
   prescriptions: `CREATE TABLE prescriptions (id INT IDENTITY, patient_id INT, dentist_id INT, medication STRING, dosage STRING, instructions STRING, created_at STRING)`,
-  stock: `CREATE TABLE stock (id INT IDENTITY, item_name STRING, category STRING, quantity INT, unit STRING, reorder_level INT, last_updated STRING)`
+  stock: `CREATE TABLE stock (id INT IDENTITY, item_name STRING, category STRING, quantity INT, unit STRING, reorder_level INT, last_updated STRING)`,
+  dentist_availability: `CREATE TABLE dentist_availability (id INT IDENTITY, dentist_id INT, day_of_week INT, start_hour STRING, end_hour STRING)`
 };
 
 function loadFromDisk() {
@@ -187,6 +188,15 @@ function initDatabase() {
     ('Disposable Saliva Ejectors', 'Consumables', 80, 'packs', 15, ?),
     ('Dental Mirror Handles #4', 'Instruments', 12, 'pcs', 5, ?)`
     , [yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString(), yesterday.toISOString()]
+  );
+
+  alasql(`INSERT INTO dentist_availability (dentist_id, day_of_week, start_hour, end_hour) VALUES 
+    (1, 1, '09:00', '17:00'),
+    (1, 3, '09:00', '17:00'),
+    (1, 5, '09:00', '17:00'),
+    (2, 2, '09:00', '17:00'),
+    (2, 4, '09:00', '17:00'),
+    (2, 6, '09:00', '17:00')`
   );
 
   saveToDisk();

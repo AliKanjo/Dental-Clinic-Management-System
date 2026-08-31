@@ -3,61 +3,52 @@
     {
       "id": 1,
       "email": "admin@dental.com",
-      "password_hash": "$2a$10$DmQ1Hghi9t1n6WL2SZCHEep15NR2/bwy7i2wwgaG5Qx6N1btQ8uoq",
+      "password_hash": "$2a$10$KsSExzdDJtOGIEYQ6h/Fi.DNP7Q9cmfTrKso7Ed4K3i98YRtnVFQW",
       "role": "admin",
       "first_name": "Super",
       "last_name": "Admin",
       "phone": "555-0100",
-      "created_at": "2026-08-26T11:46:02.504Z"
+      "created_at": "2026-08-28T07:11:05.125Z"
     },
     {
       "id": 2,
       "email": "sarah.jenkins@dental.com",
-      "password_hash": "$2a$10$DmQ1Hghi9t1n6WL2SZCHEewnMxYOYuo3h4J4NkOP6KUY7/v/Yy.3G",
+      "password_hash": "$2a$10$KsSExzdDJtOGIEYQ6h/Fi.jGru8YMavr5OUs5PHIMOzNEmDgZ7bTO",
       "role": "dentist",
       "first_name": "Sarah",
       "last_name": "Jenkins",
       "phone": "555-0201",
-      "created_at": "2026-08-26T11:46:02.506Z"
+      "created_at": "2026-08-28T07:11:05.126Z"
     },
     {
       "id": 3,
       "email": "robert.chen@dental.com",
-      "password_hash": "$2a$10$DmQ1Hghi9t1n6WL2SZCHEewnMxYOYuo3h4J4NkOP6KUY7/v/Yy.3G",
+      "password_hash": "$2a$10$KsSExzdDJtOGIEYQ6h/Fi.jGru8YMavr5OUs5PHIMOzNEmDgZ7bTO",
       "role": "dentist",
       "first_name": "Robert",
       "last_name": "Chen",
       "phone": "555-0202",
-      "created_at": "2026-08-26T11:46:02.506Z"
+      "created_at": "2026-08-28T07:11:05.126Z"
     },
     {
       "id": 4,
       "email": "emily.watson@dental.com",
-      "password_hash": "$2a$10$DmQ1Hghi9t1n6WL2SZCHEez32cBXkiFq7h0qDcie3oAlWur2NuQIy",
+      "password_hash": "$2a$10$KsSExzdDJtOGIEYQ6h/Fi.n07kEYigXfo9Ec6mSyODybE17GOOeFy",
       "role": "staff",
       "first_name": "Emily",
       "last_name": "Watson",
       "phone": "555-0301",
-      "created_at": "2026-08-26T11:46:02.506Z"
+      "created_at": "2026-08-28T07:11:05.126Z"
     },
     {
       "id": 5,
       "email": "john.doe@dental.com",
-      "password_hash": "$2a$10$DmQ1Hghi9t1n6WL2SZCHEeZHti.VI./axHvdA1RVlCKHoMj5Pq.0W",
+      "password_hash": "$2a$10$KsSExzdDJtOGIEYQ6h/Fi.K7ztdcY9vLIUzNohfxHV03kXiMSkdle",
       "role": "patient",
       "first_name": "John",
       "last_name": "Doe",
       "phone": "555-0401",
-      "created_at": "2026-08-26T11:46:02.506Z"
-    },
-    {
-      "id": 6,
-      "email": "john@gmail.com",
-      "password_hash": "$2a$10$PEEd1wvXrc0EYsogQPTS2.nW31o2jx3Vw6NenkMAihG/KBuUbNaVa",
-      "role": "patient",
-      "first_name": "john",
-      "last_name": "doe",
-      "phone": ""
+      "created_at": "2026-08-28T07:11:05.126Z"
     }
   ],
   "dentists": [
@@ -89,7 +80,7 @@
       "address": "123 Pine St, Seattle",
       "medical_allergies": "Penicillin",
       "notes": "Requires pre-medication before root canal.",
-      "created_at": "2026-08-26T11:46:02.515Z"
+      "created_at": "2026-08-28T07:11:05.131Z"
     },
     {
       "id": 2,
@@ -102,7 +93,7 @@
       "address": "456 Oak Ave, Bellevue",
       "medical_allergies": "None",
       "notes": "Anxious during surgery.",
-      "created_at": "2026-08-26T11:46:02.515Z"
+      "created_at": "2026-08-28T07:11:05.131Z"
     },
     {
       "id": 3,
@@ -115,7 +106,7 @@
       "address": "789 Maple Rd, Redmond",
       "medical_allergies": "Sulfa drugs",
       "notes": "Interested in teeth whitening.",
-      "created_at": "2026-08-26T11:46:02.515Z"
+      "created_at": "2026-08-28T07:11:05.131Z"
     },
     {
       "id": 4,
@@ -128,15 +119,7 @@
       "address": "321 Elm Blvd, Seattle",
       "medical_allergies": "Latex",
       "notes": "Prefers morning appointments.",
-      "created_at": "2026-08-26T11:46:02.515Z"
-    },
-    {
-      "id": 5,
-      "user_id": 6,
-      "first_name": "john",
-      "last_name": "doe",
-      "email": "john@gmail.com",
-      "phone": ""
+      "created_at": "2026-08-28T07:11:05.131Z"
     }
   ],
   "appointments": [
@@ -144,8 +127,8 @@
       "id": 1,
       "patient_id": 1,
       "dentist_id": 1,
-      "start_time": "2026-08-25T07:00:00.000Z",
-      "end_time": "2026-08-25T08:00:00.000Z",
+      "start_time": "2026-08-27T07:00:00.000Z",
+      "end_time": "2026-08-27T08:00:00.000Z",
       "status": "completed",
       "notes": "Routine composite filling completed on #14."
     },
@@ -153,8 +136,8 @@
       "id": 2,
       "patient_id": 2,
       "dentist_id": 1,
-      "start_time": "2026-08-26T11:30:00.000Z",
-      "end_time": "2026-08-26T12:30:00.000Z",
+      "start_time": "2026-08-28T11:30:00.000Z",
+      "end_time": "2026-08-28T12:30:00.000Z",
       "status": "scheduled",
       "notes": "Routine scale and cleaning."
     },
@@ -162,28 +145,19 @@
       "id": 3,
       "patient_id": 3,
       "dentist_id": 2,
-      "start_time": "2026-08-27T06:00:00.000Z",
-      "end_time": "2026-08-27T07:00:00.000Z",
+      "start_time": "2026-08-29T06:00:00.000Z",
+      "end_time": "2026-08-29T07:00:00.000Z",
       "status": "scheduled",
       "notes": "Invisalign records collection."
     },
     {
       "id": 4,
-      "patient_id": 5,
+      "patient_id": 1,
       "dentist_id": 1,
-      "start_time": "2026-08-27T08:00:00.000Z",
-      "end_time": "2026-08-27T09:00:00.000Z",
+      "start_time": "2026-08-24T10:00:00.000Z",
+      "end_time": "2026-08-24T10:30:00.000Z",
       "status": "scheduled",
-      "notes": ""
-    },
-    {
-      "id": 5,
-      "patient_id": 5,
-      "dentist_id": 1,
-      "start_time": "2026-08-28T06:00:00.000Z",
-      "end_time": "2026-08-28T07:00:00.000Z",
-      "status": "pending",
-      "notes": ""
+      "notes": "Valid schedule slot check"
     }
   ],
   "treatments": [
@@ -228,24 +202,6 @@
       "name": "Invisalign Consultation",
       "description": "3D scanning and aligners mock consultation fee",
       "base_cost": 99
-    },
-    {
-      "id": 8,
-      "name": "Invisalign Consultation",
-      "description": "3D scanning and aligners mock consultation fee",
-      "base_cost": 99
-    },
-    {
-      "id": 9,
-      "name": "Invisalign Consultation",
-      "description": "3D scanning and aligners mock consultation fee",
-      "base_cost": 99
-    },
-    {
-      "id": 10,
-      "name": "Invisalign Consultation",
-      "description": "3D scanning and aligners mock consultation fee",
-      "base_cost": 99
     }
   ],
   "treatment_plans": [
@@ -256,7 +212,7 @@
       "title": "Restoration & Crown Plan",
       "status": "active",
       "total_cost": 1350,
-      "created_at": "2026-08-25T07:00:00.000Z"
+      "created_at": "2026-08-27T07:00:00.000Z"
     }
   ],
   "treatment_plan_items": [
@@ -290,8 +246,8 @@
       "total_amount": 150,
       "amount_paid": 150,
       "status": "paid",
-      "due_date": "2026-08-25",
-      "created_at": "2026-08-25T07:00:00.000Z"
+      "due_date": "2026-08-27",
+      "created_at": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 2,
@@ -303,8 +259,8 @@
       "total_amount": 1200,
       "amount_paid": 0,
       "status": "unpaid",
-      "due_date": "2026-08-27",
-      "created_at": "2026-08-27T06:00:00.000Z"
+      "due_date": "2026-08-29",
+      "created_at": "2026-08-29T06:00:00.000Z"
     }
   ],
   "payments": [
@@ -314,7 +270,7 @@
       "amount": 150,
       "payment_method": "card",
       "transaction_ref": "TX-778899",
-      "created_at": "2026-08-25T07:00:00.000Z"
+      "created_at": "2026-08-27T07:00:00.000Z"
     }
   ],
   "leads": [
@@ -326,7 +282,7 @@
       "phone": "555-0601",
       "source": "web",
       "status": "new",
-      "created_at": "2026-08-26T11:46:02.527Z"
+      "created_at": "2026-08-28T07:11:05.137Z"
     },
     {
       "id": 2,
@@ -336,7 +292,7 @@
       "phone": "555-0602",
       "source": "social",
       "status": "contacted",
-      "created_at": "2026-08-26T11:46:02.527Z"
+      "created_at": "2026-08-28T07:11:05.137Z"
     },
     {
       "id": 3,
@@ -346,7 +302,7 @@
       "phone": "555-0603",
       "source": "referral",
       "status": "converted",
-      "created_at": "2026-08-26T11:46:02.527Z"
+      "created_at": "2026-08-28T07:11:05.137Z"
     }
   ],
   "follow_ups": [],
@@ -358,7 +314,7 @@
       "medication": "Amoxicillin 500mg",
       "dosage": "1 tablet 3 times a day",
       "instructions": "Take with food for 7 days",
-      "created_at": "2026-08-25T07:00:00.000Z"
+      "created_at": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 2,
@@ -367,7 +323,7 @@
       "medication": "Ibuprofen 400mg",
       "dosage": "1 tablet every 6 hours",
       "instructions": "Take as needed for pain relief",
-      "created_at": "2026-08-25T07:00:00.000Z"
+      "created_at": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 3,
@@ -376,34 +332,7 @@
       "medication": "Paracetamol 500mg",
       "dosage": "1 tablet 2 times daily",
       "instructions": "After meals",
-      "created_at": "2026-08-26T11:47:02.390Z"
-    },
-    {
-      "id": 4,
-      "patient_id": 1,
-      "dentist_id": 2,
-      "medication": "Paracetamol 500mg",
-      "dosage": "1 tablet 2 times daily",
-      "instructions": "After meals",
-      "created_at": "2026-08-26T12:00:41.975Z"
-    },
-    {
-      "id": 5,
-      "patient_id": 1,
-      "dentist_id": 2,
-      "medication": "Paracetamol 500mg",
-      "dosage": "1 tablet 2 times daily",
-      "instructions": "After meals",
-      "created_at": "2026-08-26T12:10:20.774Z"
-    },
-    {
-      "id": 6,
-      "patient_id": 1,
-      "dentist_id": 2,
-      "medication": "Paracetamol 500mg",
-      "dosage": "1 tablet 2 times daily",
-      "instructions": "After meals",
-      "created_at": "2026-08-26T12:15:04.593Z"
+      "created_at": "2026-08-28T07:11:12.745Z"
     }
   ],
   "stock": [
@@ -414,7 +343,7 @@
       "quantity": 25,
       "unit": "pcs",
       "reorder_level": 10,
-      "last_updated": "2026-08-25T07:00:00.000Z"
+      "last_updated": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 2,
@@ -423,16 +352,16 @@
       "quantity": 150,
       "unit": "boxes",
       "reorder_level": 20,
-      "last_updated": "2026-08-25T07:00:00.000Z"
+      "last_updated": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 3,
       "item_name": "Anesthetic Cartridges (Articaine)",
       "category": "Drugs",
-      "quantity": 45,
+      "quantity": 15,
       "unit": "boxes",
       "reorder_level": 8,
-      "last_updated": "2026-08-26T12:15:04.610Z"
+      "last_updated": "2026-08-28T07:11:12.762Z"
     },
     {
       "id": 4,
@@ -441,7 +370,7 @@
       "quantity": 80,
       "unit": "packs",
       "reorder_level": 15,
-      "last_updated": "2026-08-25T07:00:00.000Z"
+      "last_updated": "2026-08-27T07:00:00.000Z"
     },
     {
       "id": 5,
@@ -450,7 +379,44 @@
       "quantity": 12,
       "unit": "pcs",
       "reorder_level": 5,
-      "last_updated": "2026-08-25T07:00:00.000Z"
+      "last_updated": "2026-08-27T07:00:00.000Z"
+    }
+  ],
+  "dentist_availability": [
+    {
+      "id": 4,
+      "dentist_id": 2,
+      "day_of_week": 2,
+      "start_hour": "09:00",
+      "end_hour": "17:00"
+    },
+    {
+      "id": 5,
+      "dentist_id": 2,
+      "day_of_week": 4,
+      "start_hour": "09:00",
+      "end_hour": "17:00"
+    },
+    {
+      "id": 6,
+      "dentist_id": 2,
+      "day_of_week": 6,
+      "start_hour": "09:00",
+      "end_hour": "17:00"
+    },
+    {
+      "id": 7,
+      "dentist_id": 1,
+      "day_of_week": 1,
+      "start_hour": "09:00",
+      "end_hour": "17:00"
+    },
+    {
+      "id": 8,
+      "dentist_id": 1,
+      "day_of_week": 3,
+      "start_hour": "09:00",
+      "end_hour": "17:00"
     }
   ]
 }

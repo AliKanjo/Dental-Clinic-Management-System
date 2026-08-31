@@ -292,13 +292,122 @@ setTimeout(async () => {
     }
     console.log('✔ Stock level updated successfully.');
 
-    console.log('\n--- ALL TEST CASES COMPLETED SUCCESSFULLY (9/9) ---');
+    // Test 10: Dentist Availability Shifts & Filtering
+    console.log('Test 10: Testing Dentist Availability Shifts and Filtering...');
+
+    // 10.1: Fetch dentist availability
+    const resAvail = await fetch(`http://127.0.0.1:${testPort}/api/dentists/1/availability`, {
+      headers: { 'Cookie': cookie }
+    });
+    const availList = await resAvail.json();
+    if (resAvail.status !== 200 || !Array.isArray(availList)) {
+      throw new Error(`Fetch availability failed: ${resAvail.status}`);
+    }
+    console.log(`✔ Dentist 1 initial availability shifts count: ${availList.length}`);
+
+    // 10.2: Configure availability shifts (Mon/Wed only)
+    const resSetAvail = await fetch(`http://127.0.0.1:${testPort}/api/dentists/1/availability`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+      body: JSON.stringify({
+        shifts: [
+          { dayOfWeek: 1, startHour: '09:00', endHour: '17:00' },
+          { dayOfWeek: 3, startHour: '09:00', endHour: '17:00' }
+        ]
+      })
+    });
+    if (resSetAvail.status !== 200) {
+      throw new Error(`Set availability shifts failed: ${resSetAvail.status}`);
+    }
+    console.log('✔ Dentist shifts configured successfully (Mon/Wed only).');
+
+    // 10.3: Try booking on Tuesday (2) - should be blocked
+    console.log('Test 10.3: Booking Dr. Sarah Jenkins on Tuesday (off-day)...');
+    const resBookOffDay = await fetch(`http://127.0.0.1:${testPort}/api/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+      body: JSON.stringify({
+        patientId: 1,
+        dentistId: 1,
+        startTime: '2026-08-25T10:00:00.000Z', // August 25, 2026 is Tuesday
+        endTime: '2026-08-25T10:30:00.000Z',
+        notes: 'Off-day scheduling check'
+      })
+    });
+    const bookOffDayResult = await resBookOffDay.json();
+    if (resBookOffDay.status !== 400 || !bookOffDayResult.error) {
+      throw new Error(`Expected Tuesday booking block but got status: ${resBookOffDay.status}`);
+    }
+    console.log('✔ Tuesday booking blocked correctly:', bookOffDayResult.error);
+
+    // 10.4: Try booking on Monday outside shift hours (18:00) - should be blocked
+    console.log('Test 10.4: Booking Dr. Sarah Jenkins outside working hours (18:00)...');
+    const resBookOffHour = await fetch(`http://127.0.0.1:${testPort}/api/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+      body: JSON.stringify({
+        patientId: 1,
+        dentistId: 1,
+        startTime: '2026-08-24T18:00:00.000Z', // August 24, 2026 is Monday
+        endTime: '2026-08-24T18:30:00.000Z',
+        notes: 'Off-hour scheduling check'
+      })
+    });
+    const bookOffHourResult = await resBookOffHour.json();
+    if (resBookOffHour.status !== 400 || !bookOffHourResult.error) {
+      throw new Error(`Expected off-hour booking block but got status: ${resBookOffHour.status}`);
+    }
+    console.log('✔ Off-hour booking blocked correctly:', bookOffHourResult.error);
+
+    // 10.5: Try booking on Monday within shift hours (10:00) - should succeed
+    console.log('Test 10.5: Booking Dr. Sarah Jenkins within working hours (Monday 10:00)...');
+    const resBookOk = await fetch(`http://127.0.0.1:${testPort}/api/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+      body: JSON.stringify({
+        patientId: 1,
+        dentistId: 1,
+        startTime: '2026-08-24T10:00:00.000Z', // August 24, 2026 is Monday
+        endTime: '2026-08-24T10:30:00.000Z',
+        notes: 'Valid schedule slot check'
+      })
+    });
+    const bookOkResult = await resBookOk.json();
+    if (resBookOk.status !== 201) {
+      throw new Error(`Expected booking to succeed but failed: ${bookOkResult.error || resBookOk.status}`);
+    }
+    console.log('✔ Monday booking succeeded.');
+
+    // 10.6: Login as Dentist & filter assigned patients list
+    console.log('Test 10.6: Logging in as Dentist to check assignedOnly patients list...');
+    const resDentistLogin = await fetch(`http://127.0.0.1:${testPort}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'sarah.jenkins@dental.com', password: 'dentist123' })
+    });
+    const dentistLoginData = await resDentistLogin.json();
+    if (resDentistLogin.status !== 200) {
+      throw new Error(`Dentist login failed: ${dentistLoginData.error}`);
+    }
+    const dentistCookie = resDentistLogin.headers.get('set-cookie').split(';')[0];
+    console.log('✔ Dentist login successful.');
+
+    const resAssignedPatients = await fetch(`http://127.0.0.1:${testPort}/api/patients?assignedOnly=true`, {
+      headers: { 'Cookie': dentistCookie }
+    });
+    const assignedPatients = await resAssignedPatients.json();
+    if (resAssignedPatients.status !== 200 || !Array.isArray(assignedPatients)) {
+      throw new Error(`Fetch assigned patients failed: ${resAssignedPatients.status}`);
+    }
+    console.log(`✔ Assigned patients list fetched. Count: ${assignedPatients.length}`);
+
+    console.log('\n--- ALL TEST CASES COMPLETED SUCCESSFULLY (10/10) ---');
     cleanup(0);
   } catch (err) {
     console.error('\n❌ TEST CASE FAILED:', err.message);
     cleanup(1);
   }
-}, 4000); // Allow 4 seconds for server setup and seeding
+}, 8000); // Allow 8 seconds for server setup and seeding
 
 function cleanup(exitCode) {
   console.log('Shutting down test server...');

@@ -144,14 +144,27 @@ app.get('/api/patients', authenticateToken, requireRole(['admin', 'dentist', 'st
   try {
     const queryStr = req.query.q;
     let patients;
-    if (queryStr) {
-      patients = await dbHelper.query(
-        `SELECT * FROM patients WHERE first_name LIKE ? OR last_name LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY last_name ASC`,
-        [`%${queryStr}%`, `%${queryStr}%`, `%${queryStr}%`, `%${queryStr}%`]
-      );
-    } else {
-      patients = await dbHelper.query(`SELECT * FROM patients ORDER BY last_name ASC`);
+    
+    let query = `SELECT DISTINCT p.* FROM patients p`;
+    let conditions = [];
+    let params = [];
+    
+    if (req.user.role === 'dentist' && req.query.assignedOnly === 'true') {
+      conditions.push(`(p.id IN (SELECT patient_id FROM appointments WHERE dentist_id = ?) OR p.id IN (SELECT patient_id FROM treatment_plans WHERE dentist_id = ?))`);
+      params.push(req.user.relatedId, req.user.relatedId);
     }
+    
+    if (queryStr) {
+      conditions.push(`(p.first_name LIKE ? OR p.last_name LIKE ? OR p.phone LIKE ? OR p.email LIKE ?)`);
+      params.push(`%${queryStr}%`, `%${queryStr}%`, `%${queryStr}%`, `%${queryStr}%`);
+    }
+    
+    if (conditions.length) {
+      query += ` WHERE ` + conditions.join(' AND ');
+    }
+    query += ` ORDER BY p.last_name ASC`;
+    patients = await dbHelper.query(query, params);
+    
     res.json(patients);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -312,6 +325,30 @@ app.post('/api/appointments', authenticateToken, async (req, res) => {
   }
 
   try {
+    // Check dentist availability
+    const apptDate = new Date(startTime);
+    const dayOfWeek = apptDate.getDay();
+    const apptTimeStr = String(apptDate.getHours()).padStart(2, '0') + ':' + String(apptDate.getMinutes()).padStart(2, '0');
+    
+    const hasAnyAvail = await dbHelper.get(
+      `SELECT id FROM dentist_availability WHERE dentist_id = ?`,
+      [dentistId]
+    );
+    
+    if (hasAnyAvail) {
+      const avail = await dbHelper.query(
+        `SELECT * FROM dentist_availability WHERE dentist_id = ? AND day_of_week = ?`,
+        [dentistId, dayOfWeek]
+      );
+      if (!avail || avail.length === 0) {
+        return res.status(400).json({ error: 'The dentist is off-duty on this day.' });
+      }
+      const match = avail.find(s => apptTimeStr >= s.start_hour && apptTimeStr < s.end_hour);
+      if (!match) {
+        return res.status(400).json({ error: 'The dentist is not scheduled to work during this time slot.' });
+      }
+    }
+
     // Check dentist conflict
     const conflict = await dbHelper.get(
       `SELECT id FROM appointments 
@@ -340,7 +377,7 @@ app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
   const { status, startTime, endTime, notes } = req.body;
   
   try {
-    const appt = await dbHelper.get('SELECT patient_id FROM appointments WHERE id = ?', [req.params.id]);
+    const appt = await dbHelper.get('SELECT patient_id, dentist_id FROM appointments WHERE id = ?', [req.params.id]);
     if (!appt) return res.status(404).json({ error: 'Appointment not found.' });
 
     // Patients can only cancel their own appointments
@@ -357,6 +394,41 @@ app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
     } else {
       // Staff/Dentist/Admin can update everything
       if (startTime && endTime) {
+        // Check dentist availability
+        const apptDate = new Date(startTime);
+        const dayOfWeek = apptDate.getDay();
+        const apptTimeStr = String(apptDate.getHours()).padStart(2, '0') + ':' + String(apptDate.getMinutes()).padStart(2, '0');
+        
+        const hasAnyAvail = await dbHelper.get(
+          `SELECT id FROM dentist_availability WHERE dentist_id = ?`,
+          [appt.dentist_id]
+        );
+        
+        if (hasAnyAvail) {
+          const avail = await dbHelper.query(
+            `SELECT * FROM dentist_availability WHERE dentist_id = ? AND day_of_week = ?`,
+            [appt.dentist_id, dayOfWeek]
+          );
+          if (!avail || avail.length === 0) {
+            return res.status(400).json({ error: 'The dentist is off-duty on this day.' });
+          }
+          const match = avail.find(s => apptTimeStr >= s.start_hour && apptTimeStr < s.end_hour);
+          if (!match) {
+            return res.status(400).json({ error: 'The dentist is not scheduled to work during this time slot.' });
+          }
+        }
+
+        // Check conflict excluding current appointment
+        const conflict = await dbHelper.get(
+          `SELECT id FROM appointments 
+           WHERE dentist_id = ? AND status = 'scheduled' AND id != ?
+           AND ((start_time < ? AND end_time > ?) OR (start_time >= ? AND start_time < ?))`,
+          [appt.dentist_id, req.params.id, endTime, startTime, startTime, endTime]
+        );
+        if (conflict) {
+          return res.status(409).json({ error: 'The dentist has a scheduling conflict at this time.' });
+        }
+
         await dbHelper.run(
           `UPDATE appointments SET start_time = ?, end_time = ?, status = ?, notes = ? WHERE id = ?`,
           [startTime, endTime, status || 'scheduled', notes, req.params.id]
@@ -375,11 +447,81 @@ app.put('/api/appointments/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// --- Dentist Availability ---
+app.get('/api/dentists/:id/availability', authenticateToken, async (req, res) => {
+  try {
+    const list = await dbHelper.query(
+      `SELECT * FROM dentist_availability WHERE dentist_id = ? ORDER BY day_of_week ASC`,
+      [req.params.id]
+    );
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/dentists/:id/availability', authenticateToken, requireRole(['admin']), async (req, res) => {
+  const dentistId = req.params.id;
+  const { shifts } = req.body; // Array of { dayOfWeek: INT, startHour: STRING, endHour: STRING }
+  
+  try {
+    await dbHelper.run(`DELETE FROM dentist_availability WHERE dentist_id = ?`, [dentistId]);
+    
+    if (shifts && shifts.length) {
+      for (const s of shifts) {
+        await dbHelper.run(
+          `INSERT INTO dentist_availability (dentist_id, day_of_week, start_hour, end_hour) VALUES (?, ?, ?, ?)`,
+          [dentistId, s.dayOfWeek, s.startHour, s.endHour]
+        );
+      }
+    }
+    
+    res.json({ message: 'Dentist availability updated successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Treatments (Catalog) ---
 app.get('/api/treatments', authenticateToken, async (req, res) => {
   try {
     const treatments = await dbHelper.query(`SELECT * FROM treatments ORDER BY name ASC`);
     res.json(treatments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/plans', authenticateToken, async (req, res) => {
+  try {
+    let plans;
+    if (req.user.role === 'dentist') {
+      plans = await dbHelper.query(
+        `SELECT tp.*, p.first_name AS patient_first, p.last_name AS patient_last FROM treatment_plans tp
+         JOIN patients p ON tp.patient_id = p.id
+         WHERE tp.dentist_id = ? ORDER BY tp.created_at DESC`,
+        [req.user.relatedId]
+      );
+    } else if (req.user.role === 'patient') {
+      plans = await dbHelper.query(
+        `SELECT tp.*, u.first_name AS dentist_first, u.last_name AS dentist_last FROM treatment_plans tp
+         JOIN dentists d ON tp.dentist_id = d.id
+         JOIN users u ON d.user_id = u.id
+         WHERE tp.patient_id = ? ORDER BY tp.created_at DESC`,
+        [req.user.relatedId]
+      );
+    } else {
+      plans = await dbHelper.query(
+        `SELECT tp.*, p.first_name AS patient_first, p.last_name AS patient_last,
+                u.first_name AS dentist_first, u.last_name AS dentist_last
+         FROM treatment_plans tp
+         JOIN patients p ON tp.patient_id = p.id
+         JOIN dentists d ON tp.dentist_id = d.id
+         JOIN users u ON d.user_id = u.id
+         ORDER BY tp.created_at DESC`
+      );
+    }
+    res.json(plans);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -790,7 +932,7 @@ app.get('/api/users', authenticateToken, requireRole(['admin']), async (req, res
   try {
     const users = await dbHelper.query(
       `SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.phone, u.created_at,
-              d.specialization, d.license_number, d.color_code
+              d.id AS dentist_id, d.specialization, d.license_number, d.color_code
        FROM users u
        LEFT JOIN dentists d ON u.id = d.user_id
        ORDER BY u.role, u.last_name, u.first_name`

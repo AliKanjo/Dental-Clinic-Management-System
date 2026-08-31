@@ -69,84 +69,162 @@ function renderSidebar() {
   const menuList = document.getElementById('menu-items');
   menuList.innerHTML = '';
 
-  if (state.user.role === 'patient') {
-    // Simple patient portal links
-    const patientLinks = [
-      { key: 'portal', label: 'Online Booking', icon: 'calendar-check' },
-      { key: 'myrecords', label: 'My Medical Records', icon: 'file-text' }
-    ];
-    patientLinks.forEach(link => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <a href="#${link.key}" class="menu-link ${state.currentRoute === link.key ? 'active' : ''}" data-route="${link.key}">
-          <i data-lucide="${link.icon}"></i>
-          <span>${link.label}</span>
-        </a>
-      `;
-      menuList.appendChild(li);
-    });
-  } else {
-    // Categorized professional Clinova OS sidebar layout
-    const menuStructure = [
+  let menu = [];
+  if (state.user.role === 'admin') {
+    menu = [
+      { key: 'dashboard', label: 'Dashboard', icon: 'layout' },
       {
-        category: 'CRM & LEADS',
-        roles: ['admin', 'staff'],
+        category: 'USER MANAGEMENT',
         items: [
-          { key: 'patients', label: 'Load Center', icon: 'users' },
-          { key: 'leads', label: 'Hot Leads', icon: 'zap' },
-          { key: 'appointments', label: 'Calls & Booking', icon: 'phone-call' },
-          { key: 'followups', label: 'Follow-ups', icon: 'check-square' },
-          { key: 'portal', label: 'Online Booking Portal', icon: 'external-link' }
+          { key: 'users', label: 'Users', icon: 'users' },
+          { key: 'users-dentist', label: 'Dentists', icon: 'user-check' },
+          { key: 'users-staff', label: 'Staff', icon: 'user-cog' }
         ]
       },
       {
-        category: 'MEDICAL & TREATMENTS',
-        roles: ['admin', 'dentist', 'staff'],
+        category: 'CLINIC',
         items: [
-          { key: 'appointments', label: 'Doctor Schedule', icon: 'calendar' },
-          { key: 'prescriptions', label: 'Prescriptions', icon: 'file-text' }
+          { key: 'patients', label: 'Patients', icon: 'smile' },
+          { key: 'packages', label: 'Services', icon: 'tag' },
+          { key: 'schedules', label: 'Schedules', icon: 'clock' }
+        ]
+      },
+      {
+        category: 'OPERATIONS',
+        items: [
+          { key: 'appointments', label: 'Appointments', icon: 'calendar' }
         ]
       },
       {
         category: 'FINANCE',
-        roles: ['admin', 'staff'],
         items: [
-          { key: 'billing', label: 'Invoices & Payments', icon: 'credit-card' },
-          { key: 'packages', label: 'Packages & Services', icon: 'package' },
-          { key: 'stock', label: 'Medical Stock', icon: 'archive' }
+          { key: 'billing', label: 'Billing', icon: 'file-text' },
+          { key: 'payments', label: 'Payments', icon: 'credit-card' }
         ]
       },
       {
-        category: 'ADMIN SETTINGS',
-        roles: ['admin'],
+        category: 'REPORTS',
         items: [
-          { key: 'users', label: 'Staff & Users', icon: 'shield' }
+          { key: 'analytics', label: 'Analytics', icon: 'bar-chart' },
+          { key: 'reports', label: 'Reports', icon: 'file' }
+        ]
+      },
+      {
+        category: 'SETTINGS',
+        items: [
+          { key: 'settings', label: 'Clinic Settings', icon: 'settings' }
         ]
       }
     ];
-
-    menuStructure.forEach(cat => {
-      if (cat.roles.includes(state.user.role)) {
-        // Add Category Header
-        const headerLi = document.createElement('li');
-        headerLi.className = 'sidebar-category-header';
-        headerLi.textContent = cat.category;
-        menuList.appendChild(headerLi);
-
-        // Add Category Items
-        cat.items.forEach(item => {
-          const itemLi = document.createElement('li');
-          itemLi.innerHTML = `
-            <a href="#${item.key}" class="menu-link ${state.currentRoute === item.key ? 'active' : ''}" data-route="${item.key}">
-              <i data-lucide="${item.icon}"></i>
-              <span>${item.label}</span>
-            </a>
-          `;
-          menuList.appendChild(itemLi);
-        });
+  } else if (state.user.role === 'staff') {
+    menu = [
+      { key: 'dashboard', label: 'Dashboard', icon: 'layout' },
+      {
+        category: 'OPERATIONS',
+        items: [
+          { key: 'appointments', label: 'Appointments', icon: 'calendar' },
+          { key: 'appointments', label: 'Calendar', icon: 'calendar' },
+          { key: 'patients', label: 'Patients', icon: 'smile' },
+          { key: 'portal', label: 'Bookings', icon: 'external-link' }
+        ]
+      },
+      {
+        category: 'CRM',
+        items: [
+          { key: 'followups', label: 'Calls', icon: 'phone-call' },
+          { key: 'leads', label: 'Leads', icon: 'zap' },
+          { key: 'followups', label: 'Follow-ups', icon: 'check-square' }
+        ]
+      },
+      {
+        category: 'FINANCE',
+        items: [
+          { key: 'billing', label: 'Billing', icon: 'file-text' },
+          { key: 'payments', label: 'Payments', icon: 'credit-card' }
+        ]
       }
-    });
+    ];
+  } else if (state.user.role === 'dentist') {
+    menu = [
+      { key: 'dashboard', label: 'Dashboard', icon: 'layout' },
+      {
+        category: 'MY CLINIC',
+        items: [
+          { key: 'appointments', label: 'My Appointments', icon: 'calendar' },
+          { key: 'patients', label: 'My Patients', icon: 'smile' }
+        ]
+      },
+      {
+        category: 'CLINICAL',
+        items: [
+          { key: 'patients', label: 'Patient Records', icon: 'folder-open' },
+          { key: 'plans-list', label: 'Treatment Plans', icon: 'clipboard' },
+          { key: 'packages', label: 'Treatments', icon: 'tag' },
+          { key: 'chart', label: 'Dental Chart', icon: 'activity' },
+          { key: 'documents', label: 'Documents', icon: 'file-text' }
+        ]
+      }
+    ];
+  } else if (state.user.role === 'patient') {
+    menu = [
+      { key: 'dashboard', label: 'Dashboard', icon: 'layout' },
+      {
+        category: 'MY ACCOUNT',
+        items: [
+          { key: 'profile', label: 'My Profile', icon: 'user' }
+        ]
+      },
+      {
+        category: 'MY CARE',
+        items: [
+          { key: 'appointments', label: 'My Appointments', icon: 'calendar' },
+          { key: 'my-treatments', label: 'My Treatments', icon: 'tag' },
+          { key: 'my-treatment-plan', label: 'My Treatment Plan', icon: 'clipboard' },
+          { key: 'my-medical-records', label: 'My Medical Records', icon: 'file-text' }
+        ]
+      },
+      {
+        category: 'FINANCE',
+        items: [
+          { key: 'billing', label: 'My Invoices', icon: 'file-text' },
+          { key: 'payments', label: 'My Payments', icon: 'credit-card' }
+        ]
+      },
+      { key: 'portal', label: 'Book Appointment', icon: 'calendar-check' }
+    ];
   }
+
+  menu.forEach(cat => {
+    if (cat.category) {
+      // Add Category Header
+      const headerLi = document.createElement('li');
+      headerLi.className = 'sidebar-category-header';
+      headerLi.textContent = cat.category;
+      menuList.appendChild(headerLi);
+
+      // Add Category Items
+      cat.items.forEach(item => {
+        const itemLi = document.createElement('li');
+        itemLi.innerHTML = `
+          <a href="#${item.key}" class="menu-link ${state.currentRoute === item.key ? 'active' : ''}" data-route="${item.key}">
+            <i data-lucide="${item.icon}"></i>
+            <span>${item.label}</span>
+          </a>
+        `;
+        menuList.appendChild(itemLi);
+      });
+    } else {
+      // Top-level direct link
+      const itemLi = document.createElement('li');
+      itemLi.innerHTML = `
+        <a href="#${cat.key}" class="menu-link ${state.currentRoute === cat.key ? 'active' : ''}" data-route="${cat.key}">
+          <i data-lucide="${cat.icon}"></i>
+          <span>${cat.label}</span>
+        </a>
+      `;
+      menuList.appendChild(itemLi);
+    }
+  });
 
   // Bind click handlers to hash navigation
   document.querySelectorAll('.menu-link').forEach(link => {
@@ -204,8 +282,13 @@ async function navigate(route) {
         viewTitle.textContent = 'Online Booking Portal';
         await renderPatientBookingPortal(workspace);
         break;
+      case 'my-treatment-plan':
+        viewTitle.textContent = 'My Treatment Plans';
+        await renderPatientTreatmentPlansPortal(workspace);
+        break;
+      case 'my-medical-records':
       case 'myrecords':
-        viewTitle.textContent = 'My Treatment Summary';
+        viewTitle.textContent = 'My Medical Records';
         await renderPatientRecordsPortal(workspace);
         break;
       case 'followups':
@@ -227,6 +310,66 @@ async function navigate(route) {
       case 'users':
         viewTitle.textContent = 'Staff & User Accounts';
         await renderUsersView(workspace);
+        break;
+      case 'users-dentist':
+        viewTitle.textContent = 'Dentist Accounts';
+        await renderUsersView(workspace, 'dentist');
+        break;
+      case 'users-staff':
+        viewTitle.textContent = 'Clinic Staff Accounts';
+        await renderUsersView(workspace, 'staff');
+        break;
+      case 'schedules':
+        viewTitle.textContent = 'Dentist Schedules';
+        await renderSchedulesView(workspace);
+        break;
+      case 'payments':
+        viewTitle.textContent = 'Payments Received';
+        await renderPaymentsView(workspace);
+        break;
+      case 'analytics':
+        viewTitle.textContent = 'Dashboard Analytics';
+        await renderDashboardView(workspace);
+        break;
+      case 'reports':
+        viewTitle.textContent = 'Financial & Patient Reports';
+        await renderReportsView(workspace);
+        break;
+      case 'settings':
+        viewTitle.textContent = 'Clinic Settings';
+        await renderClinicSettingsView(workspace);
+        break;
+      case 'plans-list':
+        viewTitle.textContent = 'Treatment Plans';
+        await renderPlansListView(workspace);
+        break;
+      case 'my-treatments':
+        viewTitle.textContent = 'My Treatments Catalog';
+        await renderMyTreatmentsView(workspace);
+        break;
+      case 'profile':
+        viewTitle.textContent = 'My Account Profile';
+        await renderPatientProfileView(workspace);
+        break;
+      case 'chart':
+        viewTitle.textContent = 'Active Dental Odontogram';
+        workspace.innerHTML = `
+          <div style="background:var(--bg-secondary); padding:32px; border-radius:var(--radius-md); border:1px solid var(--border-color); text-align:center;">
+            <h3>Odontogram Charting</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;">Odontogram tracking is managed directly inside each patient's 360 profile file.</p>
+            <button class="btn btn-primary" onclick="window.location.hash='patients'; navigate('patients');">Select Patient File</button>
+          </div>
+        `;
+        break;
+      case 'documents':
+        viewTitle.textContent = 'Clinical Documents';
+        workspace.innerHTML = `
+          <div style="background:var(--bg-secondary); padding:32px; border-radius:var(--radius-md); border:1px solid var(--border-color); text-align:center;">
+            <h3>Clinical Documents Hub</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;">Upload, download, and review patient X-rays or medical records directly in their Patient 360 file.</p>
+            <button class="btn btn-primary" onclick="window.location.hash='patients'; navigate('patients');">Select Patient File</button>
+          </div>
+        `;
         break;
       default:
         // Check for specific profile sub-views e.g. #patient-360-4
@@ -527,11 +670,21 @@ async function renderDashboardView(container) {
 // 2. PATIENTS VIEWS & PATIENT 360 PROFILE
 // ==========================================================================
 async function renderPatientsView(container) {
+  const dentistFilterHtml = state.user.role === 'dentist' ? `
+    <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer; color:var(--text-primary); margin-left:16px;">
+      <input type="checkbox" id="chk-my-patients-only" checked style="width:16px; height:16px; margin:0; cursor:pointer;">
+      <span>My Patients Only</span>
+    </label>
+  ` : '';
+
   container.innerHTML = `
     <div class="view-header-actions">
-      <div class="search-input-wrapper">
-        <i data-lucide="search"></i>
-        <input type="text" id="patient-search" placeholder="Search by name, phone or email...">
+      <div style="display:flex; align-items:center; gap:16px; flex:1; flex-wrap:wrap;">
+        <div class="search-input-wrapper" style="flex:1; max-width:400px; min-width:200px;">
+          <i data-lucide="search"></i>
+          <input type="text" id="patient-search" placeholder="Search by name, phone or email...">
+        </div>
+        ${dentistFilterHtml}
       </div>
       ${state.user.role !== 'dentist' ? `<button class="btn btn-primary" id="btn-add-patient"><i data-lucide="user-plus"></i>Add Patient</button>` : ''}
     </div>
@@ -561,6 +714,11 @@ async function renderPatientsView(container) {
   const searchInput = document.getElementById('patient-search');
   searchInput.addEventListener('input', debounce(() => fetchPatients(searchInput.value), 300));
   
+  const myPatChk = document.getElementById('chk-my-patients-only');
+  if (myPatChk) {
+    myPatChk.addEventListener('change', () => fetchPatients(searchInput.value));
+  }
+
   // Add patient trigger
   if (state.user.role !== 'dentist') {
     document.getElementById('btn-add-patient').addEventListener('click', openAddPatientModal);
@@ -571,7 +729,18 @@ async function renderPatientsView(container) {
 }
 
 async function fetchPatients(query = '') {
-  const url = query ? `/api/patients?q=${encodeURIComponent(query)}` : '/api/patients';
+  const myPatChk = document.getElementById('chk-my-patients-only');
+  const assignedOnly = myPatChk && myPatChk.checked;
+  
+  let url = '/api/patients';
+  const params = [];
+  if (query) params.push(`q=${encodeURIComponent(query)}`);
+  if (assignedOnly) params.push(`assignedOnly=true`);
+  
+  if (params.length) {
+    url += '?' + params.join('&');
+  }
+
   const res = await fetch(url);
   const patients = await res.json();
   
@@ -1385,6 +1554,13 @@ async function renderAppointmentsView(container) {
   const dentists = await resDentists.json();
   state.dentists = dentists;
 
+  const dentistFilterHtml = state.user.role === 'dentist' ? `
+    <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer; color:var(--text-primary); margin-left:16px;">
+      <input type="checkbox" id="chk-my-appts-only" checked style="width:16px; height:16px; margin:0; cursor:pointer;">
+      <span>Show My Appointments Only</span>
+    </label>
+  ` : '';
+
   container.innerHTML = `
     <div class="view-header-actions">
       <div>
@@ -1395,10 +1571,11 @@ async function renderAppointmentsView(container) {
 
     <div class="calendar-view">
       <div class="calendar-header">
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
           <button class="btn btn-secondary" id="btn-cal-prev"><i data-lucide="chevron-left"></i></button>
           <button class="btn btn-secondary" id="btn-cal-today">Today</button>
           <button class="btn btn-secondary" id="btn-cal-next"><i data-lucide="chevron-right"></i></button>
+          ${dentistFilterHtml}
         </div>
         <div class="legend" style="display:flex; gap:15px; font-size:0.8rem; color:var(--text-secondary);">
           <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background-color:#eab308;margin-right:4px;"></span>Pending</span>
@@ -1430,6 +1607,13 @@ async function renderAppointmentsView(container) {
     drawCalendar(currentDate);
   });
 
+  const chk = document.getElementById('chk-my-appts-only');
+  if (chk) {
+    chk.addEventListener('change', () => {
+      drawCalendar(currentDate);
+    });
+  }
+
   await drawCalendar(currentDate);
 }
 
@@ -1445,7 +1629,12 @@ async function drawCalendar(date) {
 
   // Fetch appointments for display
   const res = await fetch('/api/appointments');
-  const appts = await res.json();
+  let appts = await res.json();
+
+  const chk = document.getElementById('chk-my-appts-only');
+  if (chk && chk.checked && state.user.role === 'dentist') {
+    appts = appts.filter(a => String(a.dentist_id) === String(state.user.relatedId));
+  }
 
   // Create grid headers
   const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -2265,14 +2454,8 @@ async function renderPatientRecordsPortal(container) {
 
   container.innerHTML = `
     <div style="max-width:800px; margin: 0 auto;">
-      <h3 style="margin-bottom:24px;">My Dental Health Record</h3>
+      <h3 style="margin-bottom:24px;">My Medical Records</h3>
       
-      <!-- Treatment Plans -->
-      <h4 style="margin-bottom:12px;">Active Care Plans</h4>
-      ${renderPlansAccordion(data.treatmentPlans)}
-      
-      <!-- Past medical notes -->
-      <h4 style="margin-top:32px; margin-bottom:12px;">Allergies & Clinical History</h4>
       <div class="stat-card" style="display:block;">
         <p style="font-weight:600; margin-bottom:8px;">Allergy Registry</p>
         <span class="badge ${data.patient.medical_allergies && data.patient.medical_allergies.toLowerCase() !== 'none' ? 'danger' : 'success'}">
@@ -2288,10 +2471,33 @@ async function renderPatientRecordsPortal(container) {
   lucide.createIcons();
 }
 
+async function renderPatientTreatmentPlansPortal(container) {
+  const patientId = state.user.relatedId;
+  if (!patientId) {
+    container.innerHTML = '<div class="toast danger">Patient record linkage missing. Please contact staff.</div>';
+    return;
+  }
+  
+  const res = await fetch(`/api/patients/${patientId}`);
+  const data = await res.json();
+
+  container.innerHTML = `
+    <div style="max-width:800px; margin: 0 auto;">
+      <h3 style="margin-bottom:24px;">My Treatment Plans</h3>
+      
+      <!-- Treatment Plans -->
+      <div class="stat-card" style="display:block;">
+        ${renderPlansAccordion(data.treatmentPlans)}
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
 // ==========================================================================
 // 7. USER & ROLE MANAGEMENT VIEW (ADMIN ONLY)
 // ==========================================================================
-async function renderUsersView(container) {
+async function renderUsersView(container, roleFilter = null) {
   container.innerHTML = `
     <div class="view-header-actions">
       <div class="search-input-wrapper">
@@ -2325,19 +2531,23 @@ async function renderUsersView(container) {
 
   // Bind events
   const searchInput = document.getElementById('user-search');
-  searchInput.addEventListener('input', debounce(() => fetchUsersList(searchInput.value), 300));
+  searchInput.addEventListener('input', debounce(() => fetchUsersList(searchInput.value, roleFilter), 300));
   
   document.getElementById('btn-add-user').addEventListener('click', openAddUserModal);
 
   // Initial load
-  await fetchUsersList();
+  await fetchUsersList('', roleFilter);
 }
 
-async function fetchUsersList(query = '') {
+async function fetchUsersList(query = '', roleFilter = null) {
   try {
     const res = await fetch('/api/users');
     if (!res.ok) throw new Error('Failed to load user accounts.');
     let users = await res.json();
+
+    if (roleFilter) {
+      users = users.filter(u => u.role === roleFilter);
+    }
 
     if (query) {
       const q = query.toLowerCase();
@@ -2377,6 +2587,11 @@ async function fetchUsersList(query = '') {
           <td>${dateStr}</td>
           <td>
             <div style="display:flex; gap:8px;">
+              ${u.role === 'dentist' && u.dentist_id ? `
+                <button class="btn btn-secondary btn-icon" onclick="openDentistAvailabilityModal(${u.dentist_id}, '${u.first_name} ${u.last_name}')" title="Manage Shifts" style="background-color:rgba(79, 70, 229, 0.05); color:#4f46e5; border:1px solid rgba(79, 70, 229, 0.2);">
+                  <i data-lucide="calendar" style="width:16px;height:16px;"></i>
+                </button>
+              ` : ''}
               <button class="btn btn-secondary btn-icon" onclick="openEditUserModalByData('${userJson}')" title="Edit User">
                 <i data-lucide="edit-3" style="width:16px;height:16px;"></i>
               </button>
@@ -2396,6 +2611,108 @@ async function fetchUsersList(query = '') {
 }
 
 // Global scope helpers for onclick handlers
+window.openDentistAvailabilityModal = async function(dentistId, dentistName) {
+  try {
+    const res = await fetch(`/api/dentists/${dentistId}/availability`);
+    const currentShifts = await res.json();
+    
+    const shiftMap = {};
+    currentShifts.forEach(s => {
+      shiftMap[s.day_of_week] = { start: s.start_hour, end: s.end_hour };
+    });
+    
+    const days = [
+      { idx: 0, name: 'Sunday' },
+      { idx: 1, name: 'Monday' },
+      { idx: 2, name: 'Tuesday' },
+      { idx: 3, name: 'Wednesday' },
+      { idx: 4, name: 'Thursday' },
+      { idx: 5, name: 'Friday' },
+      { idx: 6, name: 'Saturday' }
+    ];
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-container" style="width: 550px;">
+        <div class="modal-header">
+          <h3>Manage Working Hours — Dr. ${dentistName}</h3>
+          <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()"><i data-lucide="x"></i></button>
+        </div>
+        <form id="dentist-availability-form">
+          <div class="modal-body" style="max-height: 450px; overflow-y: auto;">
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px;">Configure working days and shift hours for Dr. ${dentistName}. Unchecked days are marked as off-duty.</p>
+            
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              ${days.map(d => {
+                const checked = shiftMap[d.idx] ? 'checked' : '';
+                const start = shiftMap[d.idx] ? shiftMap[d.idx].start : '09:00';
+                const end = shiftMap[d.idx] ? shiftMap[d.idx].end : '17:00';
+                return `
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-color); gap:12px;">
+                    <label style="display:flex; align-items:center; gap:8px; width:120px; font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="avail-check-${d.idx}" ${checked} style="width:16px; height:16px;">
+                      <span>${d.name}</span>
+                    </label>
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end;">
+                      <input type="time" id="avail-start-${d.idx}" value="${start}" style="padding:6px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-secondary); color:var(--text-primary); font-size:0.85rem;">
+                      <span style="color:var(--text-muted); font-size:0.8rem;">to</span>
+                      <input type="time" id="avail-end-${d.idx}" value="${end}" style="padding:6px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-secondary); color:var(--text-primary); font-size:0.85rem;">
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Availability</button>
+          </div>
+        </form>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    lucide.createIcons();
+    
+    document.getElementById('dentist-availability-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const shifts = [];
+      days.forEach(d => {
+        const check = document.getElementById(`avail-check-${d.idx}`);
+        if (check.checked) {
+          shifts.push({
+            dayOfWeek: d.idx,
+            startHour: document.getElementById(`avail-start-${d.idx}`).value,
+            endHour: document.getElementById(`avail-end-${d.idx}`).value
+          });
+        }
+      });
+      
+      try {
+        const saveRes = await fetch(`/api/dentists/${dentistId}/availability`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shifts })
+        });
+        
+        if (saveRes.ok) {
+          showToast('Dentist availability updated successfully.', 'success');
+          modal.remove();
+        } else {
+          const err = await saveRes.json();
+          showToast(err.error || 'Failed to update availability.', 'danger');
+        }
+      } catch (err) {
+        showToast('Network error updating availability.', 'danger');
+      }
+    });
+  } catch (err) {
+    showToast('Failed to fetch availability details.', 'danger');
+  }
+};
+
 window.openEditUserModalByData = function(userJsonStr) {
   const user = JSON.parse(userJsonStr.replace(/&quot;/g, '"'));
   openEditUserModal(user);
@@ -3467,4 +3784,352 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+// ==========================================================================
+// 8. ROLE-BASED SYSTEM OPERATIONS & EXTRA SUB-VIEWS
+// ==========================================================================
+async function renderSchedulesView(container) {
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+      <h3 style="margin-bottom:12px;">Dentist Working Schedules</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Configure weekly work shifts and hours for each clinic doctor.</p>
+      
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Dentist Name</th>
+                <th>Specialization</th>
+                <th>Working Days & Hours</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="schedules-table-body">
+              <tr><td colspan="4" style="text-align:center;">Loading dentist list...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch('/api/dentists');
+    const dentists = await res.json();
+    const tbody = document.getElementById('schedules-table-body');
+    
+    if (dentists.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No dentists configured in system.</td></tr>';
+      return;
+    }
+    
+    const rows = await Promise.all(dentists.map(async d => {
+      const resAvail = await fetch(`/api/dentists/${d.id}/availability`);
+      const avail = await resAvail.json();
+      
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const shiftText = avail.length > 0
+        ? avail.map(s => `<strong>${days[s.day_of_week]}</strong> (${s.start_hour}-${s.end_hour})`).join(', ')
+        : '<span style="color:var(--text-muted);">No shifts scheduled (Off-duty)</span>';
+        
+      return `
+        <tr>
+          <td><strong>Dr. ${d.first_name} ${d.last_name}</strong></td>
+          <td>${d.specialization}</td>
+          <td>${shiftText}</td>
+          <td>
+            <button class="btn btn-secondary btn-icon" onclick="openDentistAvailabilityModal(${d.id}, '${d.first_name} ${d.last_name}')" title="Configure Schedule">
+              <i data-lucide="clock" style="width:16px;height:16px;"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }));
+    
+    tbody.innerHTML = rows.join('');
+    lucide.createIcons();
+  } catch (err) {
+    showToast('Failed to load schedule list', 'danger');
+  }
+}
+
+async function renderPaymentsView(container) {
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+      <h3 style="margin-bottom:12px;">Payment Transactions Log</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">History of all recorded transaction payments across clinic invoices.</p>
+      
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Patient</th>
+                <th>Procedure / Plan</th>
+                <th>Amount Paid</th>
+                <th>Method</th>
+                <th>Ref Code</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table-body">
+              <tr><td colspan="7" style="text-align:center;">Loading payments log...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch('/api/payments');
+    const list = await res.json();
+    const tbody = document.getElementById('payments-table-body');
+    
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No payment transactions recorded.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(pay => {
+      const nameText = pay.first_name ? `${pay.first_name} ${pay.last_name}` : 'My Account';
+      return `
+        <tr>
+          <td><strong>TX-10${pay.id}</strong></td>
+          <td>${nameText}</td>
+          <td>${pay.plan_title || 'General Clinic Charge'}</td>
+          <td style="color:var(--success-color); font-weight:700;">$${pay.amount.toFixed(2)}</td>
+          <td><span class="badge primary" style="text-transform:uppercase;">${pay.payment_method}</span></td>
+          <td><code>${pay.transaction_ref || 'N/A'}</code></td>
+          <td>${formatDateTime(pay.created_at)}</td>
+        </tr>
+      `;
+    }).join('');
+    lucide.createIcons();
+  } catch (err) {
+    showToast('Failed to load payments history', 'danger');
+  }
+}
+
+async function renderReportsView(container) {
+  const res = await fetch('/api/dashboard/stats');
+  const stats = await res.json();
+  
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm); max-width:800px; margin:0 auto;">
+      <h3 style="margin-bottom:16px;">Clinic Performance & Financial Report</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Generated report summary for clinic business calculations.</p>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
+        <div class="stat-card" style="display:block; padding:20px;">
+          <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Total Expected Billings</span>
+          <strong style="font-size:1.6rem; color:var(--text-primary); font-family:var(--font-display);">$${(stats.revenue || 0).toFixed(2)}</strong>
+        </div>
+        <div class="stat-card" style="display:block; padding:20px;">
+          <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Total Cash Collections</span>
+          <strong style="font-size:1.6rem; color:var(--success-color); font-family:var(--font-display);">$${(stats.collected || 0).toFixed(2)}</strong>
+        </div>
+        <div class="stat-card" style="display:block; padding:20px;">
+          <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Total Clinic Invoices</span>
+          <strong style="font-size:1.6rem; color:var(--text-primary); font-family:var(--font-display);">${stats.patientsCount || 0} files</strong>
+        </div>
+        <div class="stat-card" style="display:block; padding:20px;">
+          <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Outstanding Receivables</span>
+          <strong style="font-size:1.6rem; color:var(--danger-color); font-family:var(--font-display);">$${(stats.outstanding || 0).toFixed(2)}</strong>
+        </div>
+      </div>
+      
+      <div style="text-align:right;">
+        <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i>Print Report Summary</button>
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
+async function renderClinicSettingsView(container) {
+  const name = localStorage.getItem('clinic_name') || 'DentalFlow Clinic';
+  const phone = localStorage.getItem('clinic_phone') || '555-0199';
+  const email = localStorage.getItem('clinic_email') || 'contact@dentalflow.com';
+  const address = localStorage.getItem('clinic_address') || '456 Medical Center Dr, Seattle';
+  
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:32px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm); max-width:600px; margin:0 auto;">
+      <h3 style="margin-bottom:16px;">Clinic Information & Settings</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Configure general system metadata and business card branding details.</p>
+      
+      <form id="clinic-settings-form">
+        <div class="form-group">
+          <label>Clinic Trade Name*</label>
+          <input type="text" id="cfg-name" required value="${name}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary);">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Support Phone*</label>
+            <input type="text" id="cfg-phone" required value="${phone}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label>Billing Contact Email*</label>
+            <input type="email" id="cfg-email" required value="${email}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary);">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Physical Address</label>
+          <input type="text" id="cfg-address" value="${address}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary);">
+        </div>
+        
+        <div style="margin-top:24px; text-align:right;">
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  document.getElementById('clinic-settings-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    localStorage.setItem('clinic_name', document.getElementById('cfg-name').value);
+    localStorage.setItem('clinic_phone', document.getElementById('cfg-phone').value);
+    localStorage.setItem('clinic_email', document.getElementById('cfg-email').value);
+    localStorage.setItem('clinic_address', document.getElementById('cfg-address').value);
+    showToast('Clinic configuration settings updated.', 'success');
+  });
+}
+
+async function renderPlansListView(container) {
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm);">
+      <h3 style="margin-bottom:12px;">Active Dental Care Plans</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Overview of all mapped patient treatment plans, costs, and progress tracking.</p>
+      
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Plan Title</th>
+                <th>Status</th>
+                <th>Total Cost</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="plans-list-table-body">
+              <tr><td colspan="5" style="text-align:center;">Loading treatment plans...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch('/api/plans');
+    const list = await res.json();
+    const tbody = document.getElementById('plans-list-table-body');
+    
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No treatment plans configured.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(plan => `
+      <tr>
+        <td><strong>${plan.patient_first} ${plan.patient_last}</strong></td>
+        <td>${plan.title}</td>
+        <td><span class="badge ${plan.status === 'active' ? 'primary' : 'success'}">${plan.status.toUpperCase()}</span></td>
+        <td>$${plan.total_cost.toFixed(2)}</td>
+        <td>
+          <button class="btn btn-secondary btn-icon" onclick="window.location.hash='patient-360-${plan.patient_id}'; navigate('patient-360-${plan.patient_id}');" title="Open Patient File">
+            <i data-lucide="eye" style="width:16px;height:16px;"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+    lucide.createIcons();
+  } catch (err) {
+    showToast('Failed to load plans list', 'danger');
+  }
+}
+
+async function renderMyTreatmentsView(container) {
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm); max-width:800px; margin:0 auto;">
+      <h3 style="margin-bottom:12px;">Clinic Services & Treatments Catalog</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Current treatments, service procedures, and standard clinic prices.</p>
+      
+      <div class="table-card">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Procedure Name</th>
+                <th>Description</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody id="my-treatments-table-body">
+              <tr><td colspan="3" style="text-align:center;">Loading treatments list...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    const res = await fetch('/api/treatments');
+    const list = await res.json();
+    const tbody = document.getElementById('my-treatments-table-body');
+    
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No services in catalog.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(t => `
+      <tr>
+        <td><strong>${t.name}</strong></td>
+        <td>${t.description || 'N/A'}</td>
+        <td>$${t.base_cost.toFixed(2)}</td>
+      </tr>
+    `).join('');
+    lucide.createIcons();
+  } catch (err) {
+    showToast('Failed to load catalog', 'danger');
+  }
+}
+
+async function renderPatientProfileView(container) {
+  container.innerHTML = `
+    <div style="background:var(--bg-secondary); padding:32px; border-radius:var(--radius-md); border:1px solid var(--border-color); box-shadow:var(--shadow-sm); max-width:500px; margin:0 auto;">
+      <h3 style="margin-bottom:16px;">My Account Profile</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Update your password or verify profile configuration credentials.</p>
+      
+      <form id="profile-edit-form">
+        <div class="form-group">
+          <label>Registered Name</label>
+          <input type="text" disabled value="${state.user.name}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary); cursor:not-allowed;">
+        </div>
+        
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" disabled value="${state.user.email}" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-primary); color:var(--text-primary); cursor:not-allowed;">
+        </div>
+        
+        <div class="form-group">
+          <label>Account Role</label>
+          <span class="badge primary" style="display:inline-block; margin-top:4px;">${state.user.role.toUpperCase()}</span>
+        </div>
+        
+        <div style="margin-top:24px; text-align:right;">
+          <p style="font-size:0.8rem; color:var(--text-muted);">Contact reception staff to update registration email or MRN links.</p>
+        </div>
+      </form>
+    </div>
+  `;
 }
