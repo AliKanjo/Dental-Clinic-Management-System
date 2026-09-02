@@ -889,9 +889,9 @@ async function renderPatient360View(container, patientId) {
     totalOutstanding += (inv.total_amount - inv.amount_paid);
   });
 
-  const balanceText = totalOutstanding > 0 ? `${totalOutstanding} EGP` : '0 EGP';
+  const balanceText = totalOutstanding > 0 ? `$${totalOutstanding.toLocaleString()}` : '$0';
   const openBalanceBadge = totalOutstanding > 0 
-    ? `<span class="badge danger">Open Balance: $${totalOutstanding}</span>` 
+    ? `<span class="badge danger">Open Balance: $${totalOutstanding.toLocaleString()}</span>` 
     : `<span class="badge success" style="background-color: #ecfdf5; color: #047857;">No open balance</span>`;
 
   container.innerHTML = `
@@ -944,7 +944,7 @@ async function renderPatient360View(container, patientId) {
         </div>
         <div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Total paid</p>
-          <strong style="font-size:1.25rem; color:var(--text-primary);">${totalPaid} EGP</strong>
+          <strong style="font-size:1.25rem; color:var(--text-primary);">$${totalPaid.toLocaleString()}</strong>
         </div>
         <div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Balance</p>
@@ -952,7 +952,7 @@ async function renderPatient360View(container, patientId) {
         </div>
         <div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Avg. sales</p>
-          <strong style="font-size:1.25rem; color:var(--text-primary);">${(totalPaid / (data.invoices.length || 1)).toFixed(0)} EGP</strong>
+          <strong style="font-size:1.25rem; color:var(--text-primary);">$${(totalPaid / (data.invoices.length || 1)).toLocaleString(undefined, {maximumFractionDigits: 0})}</strong>
         </div>
         <div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Remaining sessions</p>
@@ -1003,11 +1003,11 @@ async function renderPatient360View(container, patientId) {
         <div style="font-size:0.85rem; display:flex; flex-direction:column; gap:8px;">
           <div style="display:flex; justify-content:space-between;">
             <span style="color:var(--text-secondary);">Paid</span>
-            <strong>${totalPaid} EGP</strong>
+            <strong>$${totalPaid.toLocaleString()}</strong>
           </div>
           <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-color); padding-top:8px;">
             <span style="color:var(--text-secondary);">Outstanding</span>
-            <strong style="color:var(--danger-color);">${totalOutstanding} EGP</strong>
+            <strong style="color:var(--danger-color);">$${totalOutstanding.toLocaleString()}</strong>
           </div>
         </div>
       </div>
