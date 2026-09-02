@@ -106,17 +106,36 @@ async function initMySQL() {
     await mysqlPool.query(`CREATE TABLE IF NOT EXISTS stock (id INT AUTO_INCREMENT PRIMARY KEY, item_name VARCHAR(255), category VARCHAR(100), quantity INT, unit VARCHAR(50), reorder_level INT, last_updated VARCHAR(100))`);
     await mysqlPool.query(`CREATE TABLE IF NOT EXISTS dentist_availability (id INT AUTO_INCREMENT PRIMARY KEY, dentist_id INT, day_of_week INT, start_hour VARCHAR(20), end_hour VARCHAR(20))`);
 
-    // Check if seed needed
-    const [userRows] = await mysqlPool.query('SELECT COUNT(*) AS count FROM users');
-    if (userRows[0].count === 0) {
-      console.log('[Database] Seeding initial data into MySQL...');
+    // Check if seed needed or test env reset
+    if (process.env.NODE_ENV === 'test') {
+      await clearMySQLData();
       await seedMySQLData();
+    } else {
+      const [userRows] = await mysqlPool.query('SELECT COUNT(*) AS count FROM users');
+      if (userRows[0].count === 0) {
+        console.log('[Database] Seeding initial data into MySQL...');
+        await seedMySQLData();
+      }
     }
   } catch (err) {
     console.warn(`[Database] Could not connect to MySQL server (${err.message}). Using portable SQL database engine (AlaSQL).`);
     useMySQL = false;
     initAlaSQLDatabase();
   }
+}
+
+async function clearMySQLData() {
+  const tables = [
+    'dentist_availability', 'stock', 'prescriptions', 'payments', 'invoices',
+    'treatment_plan_items', 'treatment_plans', 'follow_ups', 'leads',
+    'appointments', 'treatments', 'patients', 'dentists', 'users'
+  ];
+  await mysqlPool.query('SET FOREIGN_KEY_CHECKS = 0');
+  for (const t of tables) {
+    await mysqlPool.query(`DELETE FROM \`${t}\``);
+    await mysqlPool.query(`ALTER TABLE \`${t}\` AUTO_INCREMENT = 1`);
+  }
+  await mysqlPool.query('SET FOREIGN_KEY_CHECKS = 1');
 }
 
 async function seedMySQLData() {

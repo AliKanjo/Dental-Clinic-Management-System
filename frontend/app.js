@@ -584,21 +584,21 @@ async function renderDashboardView(container) {
       <div class="stat-card success">
         <div class="stat-info">
           <p>Revenue (Generated)</p>
-          <h3>$${stats.revenue.toLocaleString()}</h3>
+          <h3>$${((stats && stats.revenue) || 0).toLocaleString()}</h3>
         </div>
         <div class="stat-icon"><i data-lucide="dollar-sign"></i></div>
       </div>
       <div class="stat-card primary">
         <div class="stat-info">
           <p>Collected Payments</p>
-          <h3>$${stats.collected.toLocaleString()}</h3>
+          <h3>$${((stats && stats.collected) || 0).toLocaleString()}</h3>
         </div>
         <div class="stat-icon"><i data-lucide="wallet"></i></div>
       </div>
       <div class="stat-card danger">
         <div class="stat-info">
           <p>Outstanding Balances</p>
-          <h3>$${stats.outstanding.toLocaleString()}</h3>
+          <h3>$${((stats && stats.outstanding) || 0).toLocaleString()}</h3>
         </div>
         <div class="stat-icon"><i data-lucide="alert-circle"></i></div>
       </div>

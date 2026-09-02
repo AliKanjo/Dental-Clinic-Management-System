@@ -1106,8 +1106,8 @@ app.delete('/api/users/:id', authenticateToken, requireRole(['admin']), async (r
 app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentist', 'staff']), async (req, res) => {
   try {
     // 1. Core aggregates
-    const apptsCount = await dbHelper.get("SELECT COUNT(*) AS [total] FROM appointments WHERE status = 'scheduled'");
-    const patientsCount = await dbHelper.get("SELECT COUNT(*) AS [total] FROM patients");
+    const apptsCount = await dbHelper.get("SELECT COUNT(*) AS total FROM appointments WHERE status = 'scheduled'");
+    const patientsCount = await dbHelper.get("SELECT COUNT(*) AS total FROM patients");
     
     // Financials
     const billingStats = await dbHelper.get(`
@@ -1119,36 +1119,38 @@ app.get('/api/dashboard/stats', authenticateToken, requireRole(['admin', 'dentis
 
     // 2. Calendar distribution (Appointments per status)
     const apptStatusStats = await dbHelper.query(
-      `SELECT status, COUNT(*) AS [count] FROM appointments GROUP BY status`
+      `SELECT status, COUNT(*) AS count FROM appointments GROUP BY status`
     );
 
     // 3. Treatment popularity
     const treatmentPopularity = await dbHelper.query(`
-      SELECT t.name, COUNT(*) AS [count] 
+      SELECT t.name, COUNT(*) AS count 
       FROM treatment_plan_items tpi
       JOIN treatments t ON tpi.treatment_id = t.id
-      GROUP BY t.id ORDER BY [count] DESC LIMIT 5
+      GROUP BY t.id, t.name ORDER BY count DESC LIMIT 5
     `);
 
     // 4. Monthly earnings distribution (last 6 months)
+    const dateFunc = dbHelper.isMySQL ? "DATE_FORMAT(created_at, '%Y-%m')" : "strftime('%Y-%m', created_at)";
     const monthlyEarnings = await dbHelper.query(`
-      SELECT strftime('%Y-%m', created_at) AS month, SUM(amount) AS [total]
+      SELECT ${dateFunc} AS month, SUM(amount) AS total
       FROM payments
       GROUP BY month ORDER BY month DESC LIMIT 6
     `);
 
     res.json({
-      appointmentsCount: apptsCount.total,
-      patientsCount: patientsCount.total,
-      revenue: billingStats.revenue || 0,
-      collected: billingStats.collected || 0,
-      outstanding: billingStats.outstanding || 0,
-      appointmentDistribution: apptStatusStats,
-      treatmentsPopularity: treatmentPopularity,
-      monthlyEarnings: monthlyEarnings.reverse()
+      appointmentsCount: (apptsCount && apptsCount.total) || 0,
+      patientsCount: (patientsCount && patientsCount.total) || 0,
+      revenue: (billingStats && billingStats.revenue) || 0,
+      collected: (billingStats && billingStats.collected) || 0,
+      outstanding: (billingStats && billingStats.outstanding) || 0,
+      appointmentDistribution: apptStatusStats || [],
+      treatmentsPopularity: treatmentPopularity || [],
+      monthlyEarnings: monthlyEarnings ? monthlyEarnings.reverse() : []
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching dashboard stats:', err);
+    res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
   }
 });
 
