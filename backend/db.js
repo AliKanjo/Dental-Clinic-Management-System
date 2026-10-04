@@ -41,7 +41,18 @@ function saveAlaSQLToDisk() {
       data[t] = [];
     }
   });
-  fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
+
+  try {
+    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    try {
+      const tmpPath = path.join('/tmp', 'dental.json');
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err2) {
+      // In-memory operation continues even if filesystem is strictly read-only
+      console.warn('[Database] Filesystem is read-only, changes kept in memory:', err2.message);
+    }
+  }
 }
 
 const tableDefinitionsAlaSQL = {
@@ -254,9 +265,11 @@ async function seedMySQLData() {
 
 // --- AlaSQL Fallback Implementation ---
 function loadFromDiskAlaSQL() {
-  if (!fs.existsSync(jsonPath)) return false;
+  const tmpPath = path.join('/tmp', 'dental.json');
+  const targetPath = fs.existsSync(tmpPath) ? tmpPath : (fs.existsSync(jsonPath) ? jsonPath : null);
+  if (!targetPath) return false;
   try {
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(targetPath, 'utf-8'));
     for (let table in data) {
       if (tableDefinitionsAlaSQL[table]) {
         alasql(tableDefinitionsAlaSQL[table]);

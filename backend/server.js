@@ -4,15 +4,20 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 const dbHelper = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dental-secret-key-12345';
 
+const publicDir = fs.existsSync(path.join(__dirname, '../public'))
+  ? path.join(__dirname, '../public')
+  : path.join(__dirname, '../frontend');
+
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(publicDir));
 
 // --- Authentication Middleware ---
 function authenticateToken(req, res, next) {
@@ -1377,9 +1382,13 @@ Do not include any markdown styling (like triple backticks or \`\`\`json) or cha
 
 // Catch-all route to serve SPA frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Dental Clinic Management System listening on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Dental Clinic Management System listening on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

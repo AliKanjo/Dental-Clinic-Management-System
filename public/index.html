@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DentalFlow — Premium Clinic Management System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons (loaded via CDN) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for Business Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/style.css?v=2">
+</head>
+<body class="light-mode">
+  
+  <!-- Global Toast Notification Banner -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Authentication Shell (Login & Registration Screen Overlay) -->
+  <div id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <div class="auth-card-left">
+        <div class="auth-card-content">
+          <div class="auth-brand">
+            <div class="brand-logo-icon">
+              <i data-lucide="activity" class="text-indigo"></i>
+            </div>
+            <h1>DentalFlow</h1>
+            <p>Premium Clinic Management System</p>
+          </div>
+
+          <!-- Login Form -->
+          <form id="login-form" class="auth-form">
+            <h2>Welcome Back</h2>
+            <p class="auth-subtitle">Log in to manage patient charts, appointments, and billing.</p>
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" required placeholder="admin@dental.com">
+            </div>
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label for="login-password" style="margin-bottom:0;">Password</label>
+                <a href="#" id="go-to-forgot" style="font-size:0.8rem;">Forgot password?</a>
+              </div>
+              <input type="password" id="login-password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Log In</button>
+            <p class="auth-toggle">Don't have an account? <a href="#" id="go-to-register">Sign Up</a></p>
+          </form>
+
+          <!-- Register Form -->
+          <form id="register-form" class="auth-form hidden">
+            <h2>Create Your Account</h2>
+            <p class="auth-subtitle">Choose your role and register to access the clinic system.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-first-name">First Name</label>
+                <input type="text" id="reg-first-name" placeholder="John">
+              </div>
+              <div class="form-group">
+                <label for="reg-last-name">Last Name</label>
+                <input type="text" id="reg-last-name" placeholder="Doe">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <input type="email" id="reg-email" placeholder="john.doe@email.com">
+            </div>
+            <div class="form-group">
+              <label for="reg-password">Create Password</label>
+              <input type="password" id="reg-password" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label for="reg-role">Account Role</label>
+              <select id="reg-role" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
+                <option value="patient">Patient</option>
+                <option value="dentist">Dentist (Doctor)</option>
+                <option value="staff">Clinic Staff</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="reg-phone">Phone Number</label>
+              <input type="tel" id="reg-phone" placeholder="555-0199">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            <p class="auth-toggle">Already have an account? <a href="#" id="go-to-login">Log In</a></p>
+          </form>
+
+          <!-- Forgot Password Form -->
+          <form id="forgot-form" class="auth-form hidden">
+            <h2>Reset Password</h2>
+            <p class="auth-subtitle">Enter your account email to receive a verification code and reset your password.</p>
+            
+            <div id="forgot-step-1">
+              <div class="form-group">
+                <label for="forgot-email">Account Email Address</label>
+                <input type="email" id="forgot-email" placeholder="admin@dental.com">
+              </div>
+              <button type="button" id="btn-send-reset-code" class="btn btn-primary btn-block">Send Reset Code</button>
+            </div>
+
+            <div id="forgot-step-2" class="hidden">
+              <div class="form-group" style="margin-top:16px;">
+                <label for="forgot-code">6-Digit Verification Code</label>
+                <input type="text" id="forgot-code" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight:600; font-size:1.1rem; text-align:center;">
+              </div>
+              <div class="form-group">
+                <label for="forgot-new-password">New Password</label>
+                <input type="password" id="forgot-new-password" placeholder="••••••••">
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Reset & Save Password</button>
+            </div>
+
+            <p class="auth-toggle">Remembered your password? <a href="#" id="go-to-login-from-forgot">Back to Log In</a></p>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right Banner Media Side -->
+      <div class="auth-card-right">
+        <div class="auth-banner-overlay">
+          <h3>State-of-the-Art Dental Care</h3>
+          <p>Streamlined. Efficient. Advanced clinic operations management.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div id="app-shell" class="app-shell hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i data-lucide="activity"></i>
+          </div>
+          <span>DentalFlow</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-menu">
+        <ul id="menu-items">
+          <!-- Dynamic sidebar links based on user roles will be injected here -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-badge">
+          <div class="avatar" id="user-avatar-char">A</div>
+          <div class="user-details">
+            <span class="user-name" id="profile-name">Emily Watson</span>
+            <span class="user-role" id="profile-role">Receptionist</span>
+          </div>
+        </div>
+        <button class="btn-logout" id="btn-logout" title="Log Out">
+          <i data-lucide="log-out"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="main-content">
+      <header class="app-header">
+        <div class="header-left">
+          <button id="toggle-sidebar" class="btn-icon mobile-only">
+            <i data-lucide="menu"></i>
+          </button>
+          <h1 id="view-title">Dashboard</h1>
+        </div>
+        
+        <div class="header-right">
+          <button id="toggle-theme" class="btn-icon" title="Toggle Theme">
+            <i data-lucide="sun" id="theme-icon"></i>
+          </button>
+          <div class="header-notification">
+            <button class="btn-icon notification-badge" id="btn-notifications">
+              <i data-lucide="bell"></i>
+              <span class="badge-dot"></span>
+            </button>
+            <!-- Quick Alert Notification Panel -->
+            <div id="notification-panel" class="notification-panel hidden">
+              <div class="panel-header">
+                <h3>Notifications</h3>
+                <button class="btn-text" id="clear-notifications">Clear All</button>
+              </div>
+              <div class="panel-content" id="notification-list">
+                <div class="empty-state">No notifications.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic View Container -->
+      <section class="workspace-view" id="workspace-view">
+        <!-- Views are rendered dynamically here -->
+      </section>
+    </main>
+  </div>
+
+  <!-- Core App Controller Script -->
+  <script src="/app.js"></script>
+</body>
+</html>
