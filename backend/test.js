@@ -46,6 +46,41 @@ setTimeout(async () => {
     }
     console.log('✔ Invalid login rejected correctly:', dataLoginFail.error);
 
+    // Test 2.1: Forgot & Reset Password Flow
+    console.log('Test 2.1: Testing Forgot & Reset Password API flow...');
+    const resForgot = await fetch(`http://127.0.0.1:${testPort}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'john.doe@dental.com' })
+    });
+    const dataForgot = await resForgot.json();
+    if (resForgot.status !== 200 || !dataForgot.resetCode) {
+      throw new Error(`Forgot password failed: ${dataForgot.error}`);
+    }
+    console.log(`✔ Forgot password reset code generated: ${dataForgot.resetCode}`);
+
+    const resReset = await fetch(`http://127.0.0.1:${testPort}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'john.doe@dental.com', resetCode: dataForgot.resetCode, newPassword: 'newpassword123' })
+    });
+    const dataReset = await resReset.json();
+    if (resReset.status !== 200) {
+      throw new Error(`Reset password failed: ${dataReset.error}`);
+    }
+    console.log('✔ Reset password successful:', dataReset.message);
+
+    // Verify login with new password
+    const resLoginNew = await fetch(`http://127.0.0.1:${testPort}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'john.doe@dental.com', password: 'newpassword123' })
+    });
+    if (resLoginNew.status !== 200) {
+      throw new Error('Login with new reset password failed.');
+    }
+    console.log('✔ Login with new reset password verified.');
+
     // Test 3: Successful Login (Admin)
     console.log('Test 3: Testing admin login...');
     const resLogin = await fetch(`http://127.0.0.1:${testPort}/api/auth/login`, {

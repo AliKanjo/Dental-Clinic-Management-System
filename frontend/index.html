@@ -42,7 +42,10 @@
               <input type="email" id="login-email" required placeholder="admin@dental.com">
             </div>
             <div class="form-group">
-              <label for="login-password">Password</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label for="login-password" style="margin-bottom:0;">Password</label>
+                <a href="#" id="go-to-forgot" style="font-size:0.8rem;">Forgot password?</a>
+              </div>
               <input type="password" id="login-password" required placeholder="••••••••">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Log In</button>
@@ -86,6 +89,34 @@
             </div>
             <button type="submit" class="btn btn-primary btn-block">Create Account</button>
             <p class="auth-toggle">Already have an account? <a href="#" id="go-to-login">Log In</a></p>
+          </form>
+
+          <!-- Forgot Password Form -->
+          <form id="forgot-form" class="auth-form hidden">
+            <h2>Reset Password</h2>
+            <p class="auth-subtitle">Enter your account email to receive a verification code and reset your password.</p>
+            
+            <div id="forgot-step-1">
+              <div class="form-group">
+                <label for="forgot-email">Account Email Address</label>
+                <input type="email" id="forgot-email" placeholder="admin@dental.com">
+              </div>
+              <button type="button" id="btn-send-reset-code" class="btn btn-primary btn-block">Send Reset Code</button>
+            </div>
+
+            <div id="forgot-step-2" class="hidden">
+              <div class="form-group" style="margin-top:16px;">
+                <label for="forgot-code">6-Digit Verification Code</label>
+                <input type="text" id="forgot-code" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight:600; font-size:1.1rem; text-align:center;">
+              </div>
+              <div class="form-group">
+                <label for="forgot-new-password">New Password</label>
+                <input type="password" id="forgot-new-password" placeholder="••••••••">
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Reset & Save Password</button>
+            </div>
+
+            <p class="auth-toggle">Remembered your password? <a href="#" id="go-to-login-from-forgot">Back to Log In</a></p>
           </form>
         </div>
       </div>

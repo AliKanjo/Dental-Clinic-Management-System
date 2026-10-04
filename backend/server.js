@@ -121,6 +121,78 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// --- Password Reset Memory Store & Routes ---
+const resetCodesStore = new Map();
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.trim()) {
+    return res.status(400).json({ error: 'Please enter your account email address.' });
+  }
+
+  try {
+    const user = await dbHelper.get('SELECT id, email, first_name FROM users WHERE LOWER(email) = LOWER(?)', [email.trim()]);
+    if (!user) {
+      return res.status(404).json({ error: 'No account registered with this email address.' });
+    }
+
+    // Generate 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    resetCodesStore.set(email.trim().toLowerCase(), {
+      code,
+      expires: Date.now() + 15 * 60 * 1000 // 15 minutes validity
+    });
+
+    console.log(`[Password Reset] Verification code for ${email}: ${code}`);
+
+    res.json({
+      message: `Verification code generated successfully for ${user.first_name}.`,
+      resetCode: code
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, resetCode, newPassword } = req.body;
+  if (!email || !resetCode || !newPassword) {
+    return res.status(400).json({ error: 'Email, verification code, and new password are required.' });
+  }
+
+  if (newPassword.length < 4) {
+    return res.status(400).json({ error: 'New password must be at least 4 characters long.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const record = resetCodesStore.get(cleanEmail);
+
+  if (!record) {
+    return res.status(400).json({ error: 'No reset code requested for this email. Please request a code first.' });
+  }
+
+  if (Date.now() > record.expires) {
+    resetCodesStore.delete(cleanEmail);
+    return res.status(400).json({ error: 'Verification code expired. Please request a new code.' });
+  }
+
+  if (record.code !== resetCode.trim()) {
+    return res.status(400).json({ error: 'Invalid verification code. Please check your code and try again.' });
+  }
+
+  try {
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(newPassword, salt);
+
+    await dbHelper.run('UPDATE users SET password_hash = ? WHERE LOWER(email) = LOWER(?)', [hash, cleanEmail]);
+    resetCodesStore.delete(cleanEmail);
+
+    res.json({ message: 'Password updated successfully! You can now log in with your new password.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logged out successfully.' });

@@ -15,7 +15,7 @@ let mysqlPool = null;
 let useMySQL = false;
 
 // --- Register Custom strftime function for AlaSQL fallback ---
-alasql.fn.strftime = function(format, dateStr) {
+alasql.fn.strftime = function (format, dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
@@ -37,7 +37,7 @@ function saveAlaSQLToDisk() {
   tables.forEach(t => {
     try {
       data[t] = alasql(`SELECT * FROM ${t}`);
-    } catch(e) {
+    } catch (e) {
       data[t] = [];
     }
   });
@@ -435,10 +435,10 @@ module.exports = {
     } else {
       const sanitized = sanitizeParams(params);
       const res = alasql(sql, sanitized);
-      
+
       let lastID = null;
       let changes = 1;
-      
+
       const upperSql = sql.trim().toUpperCase();
       if (upperSql.startsWith('INSERT')) {
         const match = sql.match(/INSERT\s+INTO\s+(\w+)/i);
@@ -450,7 +450,7 @@ module.exports = {
       } else if (upperSql.startsWith('UPDATE') || upperSql.startsWith('DELETE')) {
         changes = res;
       }
-      
+
       saveAlaSQLToDisk();
       return { id: lastID, changes };
     }

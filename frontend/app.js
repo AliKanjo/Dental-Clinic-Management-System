@@ -439,12 +439,83 @@ function initEventListeners() {
   document.getElementById('go-to-register').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('forgot-form').classList.add('hidden');
     document.getElementById('register-form').classList.remove('hidden');
   });
   document.getElementById('go-to-login').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('forgot-form').classList.add('hidden');
     document.getElementById('login-form').classList.remove('hidden');
+  });
+  document.getElementById('go-to-forgot').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('forgot-form').classList.remove('hidden');
+    document.getElementById('forgot-step-1').classList.remove('hidden');
+    document.getElementById('forgot-step-2').classList.add('hidden');
+  });
+  document.getElementById('go-to-login-from-forgot').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('forgot-form').classList.add('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('login-form').classList.remove('hidden');
+  });
+
+  // Forgot Password: Request Code
+  document.getElementById('btn-send-reset-code').addEventListener('click', async () => {
+    const email = document.getElementById('forgot-email').value;
+    if (!email || !email.trim()) {
+      showToast('Please enter your account email address.', 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Verification code: ${data.resetCode}`, 'success');
+        document.getElementById('forgot-code').value = data.resetCode;
+        document.getElementById('forgot-step-2').classList.remove('hidden');
+      } else {
+        showToast(data.error || 'Failed to send reset code.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error requesting reset code.', 'danger');
+    }
+  });
+
+  // Forgot Password: Submit Reset Form
+  document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('forgot-email').value;
+    const resetCode = document.getElementById('forgot-code').value;
+    const newPassword = document.getElementById('forgot-new-password').value;
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, resetCode, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Password reset successfully! Please log in.', 'success');
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = newPassword;
+        document.getElementById('forgot-form').classList.add('hidden');
+        document.getElementById('login-form').classList.remove('hidden');
+      } else {
+        showToast(data.error || 'Password reset failed.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error resetting password.', 'danger');
+    }
   });
 
   // Login action
