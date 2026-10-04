@@ -43,7 +43,7 @@
     {
       "id": 5,
       "email": "john.doe@dental.com",
-      "password_hash": "$2a$10$8Yr2WAeTZpC0/kflmnUAsuQlS49aiX6J4Vo.dLPPr7/KbSd9URAsC",
+      "password_hash": "$2a$10$aNRM8NvF1SNNsxTHaJjG.Ot5MNbfJ21wFjE0hhCWF5k4Yn36fD6t6",
       "role": "patient",
       "first_name": "John",
       "last_name": "Doe",
@@ -183,15 +183,6 @@
       "end_time": "2026-08-29T07:00:00.000Z",
       "status": "scheduled",
       "notes": "Invisalign records collection."
-    },
-    {
-      "id": 4,
-      "patient_id": 1,
-      "dentist_id": 1,
-      "start_time": "2026-08-24T10:00:00.000Z",
-      "end_time": "2026-08-24T10:30:00.000Z",
-      "status": "scheduled",
-      "notes": "Valid schedule slot check"
     }
   ],
   "treatments": [
@@ -233,6 +224,12 @@
     },
     {
       "id": 7,
+      "name": "Invisalign Consultation",
+      "description": "3D scanning and aligners mock consultation fee",
+      "base_cost": 99
+    },
+    {
+      "id": 8,
       "name": "Invisalign Consultation",
       "description": "3D scanning and aligners mock consultation fee",
       "base_cost": 99
@@ -367,6 +364,15 @@
       "dosage": "1 tablet 2 times daily",
       "instructions": "After meals",
       "created_at": "2026-08-28T06:50:48.756Z"
+    },
+    {
+      "id": 4,
+      "patient_id": 1,
+      "dentist_id": 2,
+      "medication": "Paracetamol 500mg",
+      "dosage": "1 tablet 2 times daily",
+      "instructions": "After meals",
+      "created_at": "2026-10-04T16:38:32.141Z"
     }
   ],
   "stock": [
@@ -392,10 +398,10 @@
       "id": 3,
       "item_name": "Anesthetic Cartridges (Articaine)",
       "category": "Drugs",
-      "quantity": 15,
+      "quantity": 25,
       "unit": "boxes",
       "reorder_level": 8,
-      "last_updated": "2026-08-28T06:50:48.778Z"
+      "last_updated": "2026-10-04T16:38:32.157Z"
     },
     {
       "id": 4,
@@ -439,14 +445,14 @@
       "end_hour": "17:00"
     },
     {
-      "id": 7,
+      "id": 9,
       "dentist_id": 1,
       "day_of_week": 1,
       "start_hour": "09:00",
       "end_hour": "17:00"
     },
     {
-      "id": 8,
+      "id": 10,
       "dentist_id": 1,
       "day_of_week": 3,
       "start_hour": "09:00",

@@ -530,7 +530,12 @@ function initEventListeners() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        data = { error: `Server error (${res.status}): unexpected response` };
+      }
       if (res.ok) {
         state.user = data;
         showAppShell();
@@ -540,7 +545,8 @@ function initEventListeners() {
         showToast(data.error || 'Login failed', 'danger');
       }
     } catch (err) {
-      showToast('Network error login', 'danger');
+      console.error('Login error:', err);
+      showToast('Network error: unable to reach server', 'danger');
     }
   });
 
@@ -560,7 +566,12 @@ function initEventListeners() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role, firstName, lastName, phone })
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        data = { error: `Server error (${res.status}): unexpected response` };
+      }
       if (res.ok) {
         showToast('Account created. Please log in.', 'success');
         document.getElementById('register-form').classList.add('hidden');
@@ -569,7 +580,8 @@ function initEventListeners() {
         showToast(data.error || 'Registration failed', 'danger');
       }
     } catch (err) {
-      showToast('Network error registering', 'danger');
+      console.error('Registration error:', err);
+      showToast('Network error: unable to reach server', 'danger');
     }
   });
 

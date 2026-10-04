@@ -19,6 +19,43 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(publicDir));
 
+// CORS & Preflight handling
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// Normalize route prefix for serverless environments (handles both /api/* and /*)
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api') && !req.url.startsWith('/static') && !req.url.startsWith('/favicon.ico')) {
+    const apiPrefixes = [
+      '/auth', '/dentists', '/patients', '/appointments', '/treatments',
+      '/treatment-plans', '/invoices', '/payments', '/leads', '/follow-ups',
+      '/prescriptions', '/stock', '/dentist-availability', '/stats',
+      '/ai-notes-helper', '/ai-optimize-treatment-plan', '/users', '/health'
+    ];
+    if (apiPrefixes.some(p => req.url === p || req.url.startsWith(p + '/') || req.url.startsWith(p + '?'))) {
+      req.url = '/api' + req.url;
+    }
+  }
+  next();
+});
+
+// Health check endpoints
+app.get('/api', (req, res) => res.json({ status: 'ok', service: 'Dental Clinic Management API' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', isMySQL: dbHelper.isMySQL, timestamp: new Date().toISOString() }));
+
 // --- Authentication Middleware ---
 function authenticateToken(req, res, next) {
   const token = req.cookies.token;

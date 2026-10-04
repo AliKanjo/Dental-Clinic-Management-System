@@ -28,6 +28,7 @@ alasql.fn.strftime = function (format, dateStr) {
 const jsonPath = path.join(__dirname, 'dental.json');
 
 function saveAlaSQLToDisk() {
+  if (process.env.NODE_ENV === 'test') return;
   const tables = [
     'users', 'dentists', 'patients', 'appointments', 'treatments',
     'treatment_plans', 'treatment_plan_items', 'invoices', 'payments',
@@ -74,13 +75,23 @@ const tableDefinitionsAlaSQL = {
 
 // --- Initializing MySQL Database & Schema ---
 async function initMySQL() {
+  const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.NETLIFY;
+  const isLocalHost = !DB_HOST || DB_HOST === 'localhost' || DB_HOST === '127.0.0.1';
+
+  if (isServerless && isLocalHost) {
+    console.log('[Database] Serverless deployment detected without remote DB_HOST. Running with AlaSQL database engine.');
+    useMySQL = false;
+    return;
+  }
+
   try {
-    // 1. Connect without database to ensure DB exists
+    // 1. Connect without database to ensure DB exists with fast timeout
     const tempConn = await mysql.createConnection({
       host: DB_HOST,
       port: DB_PORT,
       user: DB_USER,
-      password: DB_PASSWORD
+      password: DB_PASSWORD,
+      connectTimeout: 2500
     });
     await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
     await tempConn.end();
@@ -93,7 +104,8 @@ async function initMySQL() {
       password: DB_PASSWORD,
       database: DB_NAME,
       waitForConnections: true,
-      connectionLimit: 10
+      connectionLimit: 10,
+      connectTimeout: 2500
     });
 
     // Test connection
@@ -290,11 +302,21 @@ function loadFromDiskAlaSQL() {
   }
 }
 
+let alaSQLReady = false;
+
 function initAlaSQLDatabase() {
-  if (loadFromDiskAlaSQL()) return;
+  if (alaSQLReady) return;
+  if (loadFromDiskAlaSQL()) {
+    alaSQLReady = true;
+    return;
+  }
 
   for (let table in tableDefinitionsAlaSQL) {
-    alasql(tableDefinitionsAlaSQL[table]);
+    try {
+      alasql(tableDefinitionsAlaSQL[table]);
+    } catch (e) {
+      // Table may already exist
+    }
   }
 
   const salt = bcrypt.genSaltSync(10);
@@ -405,10 +427,14 @@ function initAlaSQLDatabase() {
     (2, 6, '09:00', '17:00')`
   );
 
+  alaSQLReady = true;
   saveAlaSQLToDisk();
 }
 
-// Start MySQL connection check
+// ALWAYS initialize AlaSQL synchronously so database is immediately queryable (0ms cold start)
+initAlaSQLDatabase();
+
+// Attempt background MySQL connection check if configured
 initMySQL();
 
 const sanitizeParams = (params) => {
