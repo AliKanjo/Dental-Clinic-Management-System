@@ -377,6 +377,51 @@ app.put('/api/patients/:id', authenticateToken, requireRole(['admin', 'staff', '
   }
 });
 
+app.delete('/api/patients/:id', authenticateToken, requireRole(['admin', 'staff']), async (req, res) => {
+  const patientId = req.params.id;
+  try {
+    const patient = await dbHelper.get('SELECT * FROM patients WHERE id = ?', [patientId]);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found.' });
+    }
+
+    // 1. Delete treatment plan items & treatment plans
+    const plans = await dbHelper.query('SELECT id FROM treatment_plans WHERE patient_id = ?', [patientId]);
+    for (const plan of plans) {
+      await dbHelper.run('DELETE FROM treatment_plan_items WHERE treatment_plan_id = ?', [plan.id]);
+    }
+    await dbHelper.run('DELETE FROM treatment_plans WHERE patient_id = ?', [patientId]);
+
+    // 2. Delete payments & invoices
+    const invoices = await dbHelper.query('SELECT id FROM invoices WHERE patient_id = ?', [patientId]);
+    for (const inv of invoices) {
+      await dbHelper.run('DELETE FROM payments WHERE invoice_id = ?', [inv.id]);
+    }
+    await dbHelper.run('DELETE FROM invoices WHERE patient_id = ?', [patientId]);
+
+    // 3. Delete appointments
+    await dbHelper.run('DELETE FROM appointments WHERE patient_id = ?', [patientId]);
+
+    // 4. Delete prescriptions
+    await dbHelper.run('DELETE FROM prescriptions WHERE patient_id = ?', [patientId]);
+
+    // 5. Delete follow-ups
+    await dbHelper.run('DELETE FROM follow_ups WHERE patient_id = ?', [patientId]);
+
+    // 6. Delete the patient record
+    await dbHelper.run('DELETE FROM patients WHERE id = ?', [patientId]);
+
+    // 7. If linked to a user account with role 'patient', delete the linked user account as well
+    if (patient.user_id) {
+      await dbHelper.run('DELETE FROM users WHERE id = ? AND role = ?', [patient.user_id, 'patient']);
+    }
+
+    res.json({ message: 'Patient and all associated records deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Dentist Routes ---
 app.get('/api/dentists', authenticateToken, async (req, res) => {
   try {

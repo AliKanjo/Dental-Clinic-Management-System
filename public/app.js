@@ -844,12 +844,46 @@ async function fetchPatients(query = '') {
         <button class="btn btn-secondary btn-icon" onclick="window.location.hash='patient-360-${p.id}'; navigate('patient-360-${p.id}');" title="Open Patient 360 File">
           <i data-lucide="eye" style="width:16px;height:16px;"></i>
         </button>
+        ${state.user.role === 'admin' || state.user.role === 'staff' ? `
+          <button class="btn btn-secondary btn-icon" onclick="deletePatient(${p.id}, '${p.first_name.replace(/'/g, "\\'")} ${p.last_name.replace(/'/g, "\\'")}', event)" title="Delete Patient Record" style="color:var(--danger-color); margin-left:6px;">
+            <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+          </button>
+        ` : ''}
       </td>
     </tr>
   `).join('');
   
   lucide.createIcons();
 }
+
+window.deletePatient = async function(patientId, patientName, event, redirectToList = false) {
+  if (event) event.stopPropagation();
+
+  if (!confirm(`Are you sure you want to delete patient "${patientName}"? This will permanently delete their clinical records, appointments, and invoices.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/patients/${patientId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message || `Patient "${patientName}" deleted successfully.`, 'success');
+      if (redirectToList || window.location.hash.startsWith('#patient-360-')) {
+        window.location.hash = 'patients';
+        navigate('patients');
+      } else {
+        await fetchPatients();
+      }
+    } else {
+      showToast(data.error || 'Failed to delete patient.', 'danger');
+    }
+  } catch (err) {
+    console.error('Delete patient error:', err);
+    showToast('Network error deleting patient.', 'danger');
+  }
+};
 
 // Add Patient Modal Controller
 function openAddPatientModal() {
@@ -1017,6 +1051,14 @@ async function renderPatient360View(container, patientId) {
             ${openBalanceBadge}
           </div>
         </div>
+        ${state.user.role === 'admin' || state.user.role === 'staff' ? `
+          <div>
+            <button class="btn btn-secondary" onclick="deletePatient(${p.id}, '${p.first_name.replace(/'/g, "\\'")} ${p.last_name.replace(/'/g, "\\'")}', event, true)" title="Delete Patient Record" style="color:var(--danger-color); border-color:#fca5a5; background-color:#fef2f2; display:flex; align-items:center; gap:6px; padding:8px 14px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+              <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+              Delete Patient
+            </button>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Metrics Row -->

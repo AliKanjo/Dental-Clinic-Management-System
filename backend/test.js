@@ -23,7 +23,27 @@ serverProcess.stderr.on('data', (data) => {
 });
 
 // Wait for server to start, then run tests
-setTimeout(async () => {
+(async () => {
+  console.log('Waiting for test server to become ready...');
+  let ready = false;
+  for (let i = 0; i < 30; i++) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${testPort}/`);
+      if (res.status === 200) {
+        ready = true;
+        break;
+      }
+    } catch (e) {
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  if (!ready) {
+    console.error('Server failed to start in time.');
+    cleanup(1);
+    return;
+  }
+
   try {
     console.log('Running test suite...');
 
@@ -122,6 +142,38 @@ setTimeout(async () => {
     }
     console.log(`✔ Patient 360 detail verified for: ${patDetail.patient.first_name} ${patDetail.patient.last_name}`);
     console.log(`✔ Checked Patient plans count: ${patDetail.treatmentPlans.length}`);
+
+    // Test 5.1: Test Patient Deletion API
+    console.log('Test 5.1: Testing Create and Delete Patient API...');
+    const resCreatePat = await fetch(`http://127.0.0.1:${testPort}/api/patients`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
+      body: JSON.stringify({
+        firstName: 'Temp',
+        lastName: 'PatientToDelete',
+        email: 'temp.del@example.com',
+        phone: '555-9999',
+        allergies: 'None',
+        notes: 'Test record for deletion'
+      })
+    });
+    const createdPat = await resCreatePat.json();
+    if (resCreatePat.status !== 201) throw new Error('Failed to create test patient for deletion.');
+    
+    // Delete the created patient
+    const resDelPat = await fetch(`http://127.0.0.1:${testPort}/api/patients/${createdPat.id}`, {
+      method: 'DELETE',
+      headers: { 'Cookie': cookie }
+    });
+    const delResult = await resDelPat.json();
+    if (resDelPat.status !== 200) throw new Error(`Failed to delete patient: ${delResult.error}`);
+    
+    // Verify patient is gone
+    const resVerifyDel = await fetch(`http://127.0.0.1:${testPort}/api/patients/${createdPat.id}`, {
+      headers: { 'Cookie': cookie }
+    });
+    if (resVerifyDel.status !== 404) throw new Error('Deleted patient was still found!');
+    console.log('✔ Patient created and deleted successfully.');
 
     // Test 6: Authenticated User verification check
     console.log('Test 6: Testing /api/auth/me session check...');
@@ -442,7 +494,7 @@ setTimeout(async () => {
     console.error('\n❌ TEST CASE FAILED:', err.message);
     cleanup(1);
   }
-}, 8000); // Allow 8 seconds for server setup and seeding
+})();
 
 function cleanup(exitCode) {
   console.log('Shutting down test server...');
