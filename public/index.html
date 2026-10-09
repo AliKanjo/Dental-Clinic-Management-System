@@ -205,124 +205,89 @@
           <!-- Views are rendered dynamically here -->
         </section>
 
-        <!-- Page Footer (CircuitVerse Style) -->
-        <footer class="site-footer" id="site-footer">
-          <div class="footer-container">
-            <!-- Brand & Social Column -->
-            <div class="footer-col footer-col-brand">
-              <div class="footer-brand">
-                <div class="footer-logo-icon">
-                  <svg viewBox="0 0 40 40" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="20" r="17" stroke="#10b981" stroke-width="2.2" stroke-dasharray="4 2"/>
-                    <path d="M20 5v7M20 28v7M5 20h7M28 20h7" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="20" cy="12" r="2.2" fill="#10b981"/>
-                    <circle cx="20" cy="28" r="2.2" fill="#10b981"/>
-                    <circle cx="12" cy="20" r="2.2" fill="#10b981"/>
-                    <circle cx="28" cy="20" r="2.2" fill="#10b981"/>
-                    <path d="M15 15.5c1-2 7-2 8 0 1 2 2 5 2 7.5 0 3-1.2 5-2.2 5s-1.8-3-3.8-3-2.8 3-3.8 3-2.2-2-2.2-5c0-2.5 1-5.5 2-7.5z" fill="#10b981"/>
+        <!-- Professional Medical UI Footer -->
+        <footer class="medical-footer" id="medical-footer">
+          <div class="med-footer-container">
+            <!-- Column 1: Brand & Social -->
+            <div class="med-footer-col med-footer-brand-col">
+              <div class="med-footer-brand">
+                <div class="med-footer-logo">
+                  <svg viewBox="0 0 32 32" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="url(#medGrad)"/>
+                    <path d="M16 8v16M8 16h16" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="16" cy="16" r="3" fill="#ffffff"/>
+                    <defs>
+                      <linearGradient id="medGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#4f46e5"/>
+                        <stop offset="1" stop-color="#06b6d4"/>
+                      </linearGradient>
+                    </defs>
                   </svg>
                 </div>
-                <span class="footer-brand-title">DentalFlow</span>
+                <span class="med-footer-title">DentalFlow</span>
               </div>
-              
-              <div class="footer-social-section">
-                <span class="footer-social-title">Follow us on:</span>
-                <div class="footer-social-row">
-                  <!-- Facebook -->
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn btn-fb" title="Facebook" aria-label="Facebook">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                  </a>
-                  <!-- X / Twitter -->
-                  <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn btn-x" title="X (Twitter)" aria-label="X">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                  </a>
-                  <!-- LinkedIn -->
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn btn-in" title="LinkedIn" aria-label="LinkedIn">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                    </svg>
-                  </a>
-                  <!-- YouTube -->
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn btn-yt" title="YouTube" aria-label="YouTube">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
-                  </a>
-                  <!-- GitHub -->
-                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-circle-btn btn-gh" title="GitHub" aria-label="GitHub">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                  </a>
-                </div>
+              <p class="med-footer-tagline">Modern dental practice management.</p>
+              <div class="med-footer-social">
+                <!-- Facebook -->
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="med-social-btn" title="Facebook" aria-label="Facebook">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+                <!-- LinkedIn -->
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="med-social-btn" title="LinkedIn" aria-label="LinkedIn">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                  </svg>
+                </a>
+                <!-- YouTube -->
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="med-social-btn" title="YouTube" aria-label="YouTube">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </a>
+                <!-- X (Twitter) -->
+                <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="med-social-btn" title="X" aria-label="X">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
               </div>
             </div>
 
-            <!-- Column 2: Navigation Links 1 -->
-            <div class="footer-col footer-col-nav">
-              <ul class="footer-nav-links">
-                <li><a href="#chart" onclick="navigate('chart')">Simulator</a></li>
-                <li><a href="#portal" onclick="navigate('portal')">Learn</a></li>
-                <li><a href="#dashboard" onclick="navigate('dashboard')">Blog</a></li>
-                <li><a href="#packages" onclick="navigate('packages')">Explore</a></li>
-                <li><a href="#" onclick="showAuthScreen()">Log in</a></li>
+            <!-- Column 2: Features -->
+            <div class="med-footer-col">
+              <h4 class="med-footer-heading">Features</h4>
+              <ul class="med-footer-links">
+                <li><a href="#appointments" onclick="navigate('appointments')">Scheduling &amp; Reminders</a></li>
+                <li><a href="#patients" onclick="navigate('patients')">Patient Records (EHR)</a></li>
+                <li><a href="#billing" onclick="navigate('billing')">Billing &amp; Payments</a></li>
+                <li><a href="#stock" onclick="navigate('stock')">Inventory Management</a></li>
               </ul>
             </div>
 
-            <!-- Column 3: Navigation Links 2 -->
-            <div class="footer-col footer-col-nav">
-              <ul class="footer-nav-links">
-                <li><a href="#documents" onclick="navigate('documents')">Documentation</a></li>
-                <li><a href="#schedules" onclick="navigate('schedules')">Contribute</a></li>
-                <li><a href="#users-dentist" onclick="navigate('users-dentist')">Teachers</a></li>
-                <li><a href="#settings" onclick="navigate('settings')">About</a></li>
-                <li><a href="/api" target="_blank">Api</a></li>
-                <li><a href="#settings" onclick="navigate('settings')">FAQ</a></li>
-                <li><a href="#leads" onclick="navigate('leads')">Forum</a></li>
+            <!-- Column 3: Resources & Legal -->
+            <div class="med-footer-col">
+              <h4 class="med-footer-heading">Resources</h4>
+              <ul class="med-footer-links">
+                <li><a href="#documents" onclick="navigate('documents')">Help Center / Guides</a></li>
+                <li><a href="#followups" onclick="navigate('followups')">Contact Support</a></li>
+                <li><a href="#settings" onclick="navigate('settings')">Privacy &amp; Security</a></li>
+                <li><a href="#settings" onclick="navigate('settings')">Terms of Service</a></li>
               </ul>
-            </div>
-
-            <!-- Column 4: Incubated From -->
-            <div class="footer-col footer-col-badge">
-              <span class="badge-title">Incubated From:</span>
-              <div class="zense-card">
-                <svg viewBox="0 0 110 36" width="110" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Geometric connected lines -->
-                  <circle cx="8" cy="18" r="3" fill="#111827"/>
-                  <circle cx="26" cy="6" r="3" fill="#111827"/>
-                  <circle cx="26" cy="30" r="3" fill="#111827"/>
-                  <line x1="8" y1="18" x2="26" y2="6" stroke="#111827" stroke-width="2.5" stroke-linecap="round"/>
-                  <line x1="8" y1="18" x2="26" y2="30" stroke="#111827" stroke-width="2.5" stroke-linecap="round"/>
-                  <line x1="26" y1="6" x2="26" y2="30" stroke="#111827" stroke-width="2.5" stroke-linecap="round"/>
-                  <text x="36" y="25" font-family="'Inter', sans-serif" font-size="20" font-weight="600" fill="#111827" letter-spacing="-0.3">zense</text>
-                </svg>
-              </div>
-            </div>
-
-            <!-- Column 5: Infrastructure Sponsor -->
-            <div class="footer-col footer-col-badge">
-              <span class="badge-title">Infrastructure Sponsor:</span>
-              <div class="foss-card">
-                <div class="foss-card-content">
-                  <span class="foss-row-1">FOSS</span>
-                  <span class="foss-row-2">UNITED</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- Copyright Bottom Bar -->
-          <div class="footer-bottom-row">
-            <div class="footer-bottom-content">
-              <p class="footer-copy-text">Copyright © 2026 DentalFlow, All rights reserved.</p>
-              <div class="footer-extra-links">
-                <span class="system-status-badge"><span class="pulse-dot"></span> Systems Normal</span>
-                <a href="#settings" onclick="navigate('settings')">Privacy Policy</a>
-                <a href="#settings" onclick="navigate('settings')">Terms of Service</a>
+          <!-- Bottom Bar -->
+          <div class="med-footer-bottom">
+            <div class="med-footer-bottom-inner">
+              <p class="med-footer-copy">© 2026 DentalFlow. All rights reserved.</p>
+              <div class="med-footer-compliance">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+                <span>HIPAA Compliant</span>
               </div>
             </div>
           </div>

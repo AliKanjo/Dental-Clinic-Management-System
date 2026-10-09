@@ -677,212 +677,132 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Page Footer (CircuitVerse Style)
+   Professional Medical UI Footer
    ========================================================================== */
-.site-footer {
-  background-color: #111417;
+.medical-footer {
+  background-color: #0c1322;
   color: #94a3b8;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 42px 48px 24px 48px;
+  border-top: 1px solid #1e293b;
+  padding: 44px 48px 22px 48px;
   margin-top: auto;
   flex-shrink: 0;
   font-family: var(--font-body, 'Inter', sans-serif);
 }
 
-.footer-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 36px 32px;
-  max-width: 1400px;
+.med-footer-container {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr;
+  gap: 48px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
-/* Brand & Social Column */
-.footer-col-brand {
-  min-width: 220px;
+/* Column 1: Brand & Social */
+.med-footer-brand-col {
   display: flex;
   flex-direction: column;
 }
 
-.footer-brand {
+.med-footer-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
-.footer-logo-icon {
+.med-footer-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3));
 }
 
-.footer-brand-title {
+.med-footer-title {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  color: #10b981;
-  letter-spacing: -0.3px;
+  color: #f8fafc;
+  letter-spacing: -0.2px;
 }
 
-.footer-social-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.med-footer-tagline {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  max-width: 320px;
 }
 
-.footer-social-title {
-  font-size: 0.95rem;
-  color: #f1f5f9;
-  font-weight: 500;
-}
-
-.footer-social-row {
+.med-footer-social {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.social-circle-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.med-social-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #cbd5e1;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
 }
 
-.social-circle-btn:hover {
-  transform: translateY(-2px) scale(1.1);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.45);
-  filter: brightness(1.15);
+.med-social-btn:hover {
+  background-color: #334155;
+  color: #ffffff;
+  border-color: #4f46e5;
+  transform: translateY(-2px);
 }
 
-.btn-fb { background-color: #1877F2; }
-.btn-x { background-color: #000000; border: 1px solid rgba(255, 255, 255, 0.25); }
-.btn-in { background-color: #0A66C2; }
-.btn-yt { background-color: #FF0000; }
-.btn-gh { background-color: #24292E; }
-
-/* Navigation Links Columns */
-.footer-col-nav {
-  min-width: 130px;
+/* Column 2 & 3: Headings & Links */
+.med-footer-heading {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 18px;
 }
 
-.footer-nav-links {
+.med-footer-links {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.footer-nav-links li a {
-  color: #f1f5f9;
+.med-footer-links li a {
+  color: #94a3b8;
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 400;
-  transition: color 0.18s ease, transform 0.18s ease;
+  transition: all 0.18s ease;
   display: inline-block;
   cursor: pointer;
 }
 
-.footer-nav-links li a:hover {
-  color: #10b981;
+.med-footer-links li a:hover {
+  color: #38bdf8;
   transform: translateX(3px);
 }
 
-/* Badge Columns */
-.footer-col-badge {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.badge-title {
-  font-size: 0.92rem;
-  color: #f1f5f9;
-  font-weight: 500;
-}
-
-/* Zense White Card */
-.zense-card {
-  background-color: #ffffff;
-  border-radius: 8px;
-  padding: 10px 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: default;
-}
-
-.zense-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-/* FOSS UNITED Card */
-.foss-card {
-  background-color: #111417;
-  border: 3px solid #ffffff;
-  border-radius: 6px;
-  padding: 8px 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  cursor: default;
-}
-
-.foss-card:hover {
-  transform: translateY(-2px);
-  border-color: #10b981;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-}
-
-.foss-card-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.05;
-}
-
-.foss-row-1 {
-  font-family: 'Outfit', 'Inter', monospace, sans-serif;
-  font-size: 1.35rem;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  color: #ffffff;
-}
-
-.foss-row-2 {
-  font-family: 'Outfit', 'Inter', monospace, sans-serif;
-  font-size: 0.85rem;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  color: #ffffff;
-}
-
-/* Bottom Row */
-.footer-bottom-row {
-  max-width: 1400px;
+/* Bottom Bar */
+.med-footer-bottom {
+  max-width: 1300px;
   margin: 36px auto 0 auto;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 20px;
+  border-top: 1px solid #1e293b;
 }
 
-.footer-bottom-content {
+.med-footer-bottom-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -890,43 +810,39 @@ h1, h2, h3, h4, h5, h6 {
   gap: 16px;
 }
 
-.footer-copy-text {
-  font-size: 0.9rem;
-  color: #94a3b8;
+.med-footer-copy {
+  font-size: 0.88rem;
+  color: #64748b;
   margin: 0;
 }
 
-.footer-extra-links {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.footer-extra-links a {
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 0.18s ease;
-}
-
-.footer-extra-links a:hover {
-  color: #ffffff;
-}
-
-.system-status-badge {
+.med-footer-compliance {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
-  color: #cbd5e1;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #10b981;
-  box-shadow: 0 0 8px #10b981;
+@media (max-width: 768px) {
+  .medical-footer {
+    padding: 36px 20px 20px 20px;
+  }
+  .med-footer-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .med-footer-bottom-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
 
 /* ==========================================================================
