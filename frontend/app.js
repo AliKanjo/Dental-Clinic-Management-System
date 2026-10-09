@@ -254,6 +254,8 @@ async function navigate(route) {
 
   const workspace = document.getElementById('workspace-view');
   const viewTitle = document.getElementById('view-title');
+  const scrollArea = document.getElementById('workspace-scroll-area');
+  if (scrollArea) scrollArea.scrollTop = 0;
   workspace.innerHTML = '<div class="loader">Loading view...</div>';
 
   try {
