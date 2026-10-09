@@ -655,14 +655,21 @@ function addNotification(text) {
 // ==========================================================================
 async function renderDashboardView(container) {
   const res = await fetch('/api/dashboard/stats');
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || `Failed to fetch dashboard statistics (${res.status})`);
+  }
   const stats = await res.json();
+
+  const monthlyEarnings = (stats && Array.isArray(stats.monthlyEarnings)) ? stats.monthlyEarnings : [];
+  const treatmentsPopularity = (stats && Array.isArray(stats.treatmentsPopularity)) ? stats.treatmentsPopularity : [];
 
   container.innerHTML = `
     <div class="stats-grid">
       <div class="stat-card primary">
         <div class="stat-info">
           <p>Total Patients</p>
-          <h3>${stats.patientsCount}</h3>
+          <h3>${(stats && stats.patientsCount) || 0}</h3>
         </div>
         <div class="stat-icon"><i data-lucide="users"></i></div>
       </div>
@@ -710,10 +717,10 @@ async function renderDashboardView(container) {
   new Chart(ctxRev, {
     type: 'line',
     data: {
-      labels: stats.monthlyEarnings.map(m => m.month),
+      labels: monthlyEarnings.length > 0 ? monthlyEarnings.map(m => m.month) : ['Current Month'],
       datasets: [{
         label: 'Monthly Payments Collected ($)',
-        data: stats.monthlyEarnings.map(m => m.total),
+        data: monthlyEarnings.length > 0 ? monthlyEarnings.map(m => m.total || 0) : [0],
         borderColor: '#4f46e5',
         backgroundColor: 'rgba(79, 70, 229, 0.1)',
         borderWidth: 3,
@@ -735,9 +742,9 @@ async function renderDashboardView(container) {
   new Chart(ctxPop, {
     type: 'doughnut',
     data: {
-      labels: stats.treatmentsPopularity.map(t => t.name),
+      labels: treatmentsPopularity.length > 0 ? treatmentsPopularity.map(t => t.name) : ['No Data'],
       datasets: [{
-        data: stats.treatmentsPopularity.map(t => t.count),
+        data: treatmentsPopularity.length > 0 ? treatmentsPopularity.map(t => t.count || 0) : [0],
         backgroundColor: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
       }]
     },
