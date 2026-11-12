@@ -1,13 +1,34 @@
 const db = require('../db');
+const { config } = require('../config/env');
 const { AppError } = require('../middleware/errorHandler');
 
+const WEEKDAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+function getTimePartsInTimezone(dateInput, timeZone = config.clinicTimezone) {
+  const apptDate = new Date(dateInput);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  });
+  const partMap = {};
+  for (const part of formatter.formatToParts(apptDate)) {
+    partMap[part.type] = part.value;
+  }
+
+  const dayOfWeek = WEEKDAY_MAP[partMap.weekday];
+  const hour = partMap.hour === '24' ? '00' : String(partMap.hour).padStart(2, '0');
+  const minute = String(partMap.minute).padStart(2, '0');
+  return {
+    dayOfWeek,
+    timeStr: `${hour}:${minute}`,
+  };
+}
+
 async function checkDentistAvailability(dentistId, startTime) {
-  const apptDate = new Date(startTime);
-  const dayOfWeek = apptDate.getUTCDay();
-  const apptTimeStr =
-    String(apptDate.getUTCHours()).padStart(2, '0') +
-    ':' +
-    String(apptDate.getUTCMinutes()).padStart(2, '0');
+  const { dayOfWeek, timeStr: apptTimeStr } = getTimePartsInTimezone(startTime, config.clinicTimezone);
 
   const hasAnyAvail = await db.get(
     'SELECT id FROM dentist_availability WHERE dentist_id = ?',
@@ -146,6 +167,7 @@ async function updateAppointment({ user, appointmentId, data }) {
 }
 
 module.exports = {
+  getTimePartsInTimezone,
   listAppointments,
   createAppointment,
   updateAppointment,

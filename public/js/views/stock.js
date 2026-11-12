@@ -117,49 +117,51 @@ export async function renderStockView(container) {
 
 function openStockModal(existing = null, onDone) {
   const isEdit = Boolean(existing);
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">${isEdit ? 'Adjust Inventory Stock' : 'Add New Supply Item'}</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit ? 'Adjust Inventory Stock' : 'Add New Supply Item'}</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="stock-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Item Name *</label>
+              <input type="text" id="st-name" value="${escapeHtml(existing ? existing.item_name : '')}" required>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="st-cat">
+                <option value="PPE" ${existing && existing.category === 'PPE' ? 'selected' : ''}>PPE</option>
+                <option value="Restorative" ${existing && existing.category === 'Restorative' ? 'selected' : ''}>Restorative</option>
+                <option value="Anesthetics" ${existing && existing.category === 'Anesthetics' ? 'selected' : ''}>Anesthetics</option>
+                <option value="Consumables" ${!existing || existing.category === 'Consumables' ? 'selected' : ''}>Consumables</option>
+                <option value="Instruments" ${existing && existing.category === 'Instruments' ? 'selected' : ''}>Instruments</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Current Quantity *</label>
+              <input type="number" min="0" id="st-qty" value="${existing ? Number(existing.quantity) : 0}" required>
+            </div>
+            <div class="form-group">
+              <label>Unit (e.g., boxes, vials)</label>
+              <input type="text" id="st-unit" value="${escapeHtml(existing ? existing.unit || 'pcs' : 'pcs')}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Minimum Reorder Alert Level</label>
+            <input type="number" min="0" id="st-reorder" value="${existing ? Number(existing.reorder_level) : 10}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Update Stock' : 'Save Item'}</button>
+        </div>
+      </form>
     </div>
-    <form id="stock-form">
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Item Name *</label>
-            <input type="text" id="st-name" value="${escapeHtml(existing ? existing.item_name : '')}" required>
-          </div>
-          <div class="form-group">
-            <label>Category</label>
-            <select id="st-cat">
-              <option value="PPE" ${existing && existing.category === 'PPE' ? 'selected' : ''}>PPE</option>
-              <option value="Restorative" ${existing && existing.category === 'Restorative' ? 'selected' : ''}>Restorative</option>
-              <option value="Anesthetics" ${existing && existing.category === 'Anesthetics' ? 'selected' : ''}>Anesthetics</option>
-              <option value="Consumables" ${!existing || existing.category === 'Consumables' ? 'selected' : ''}>Consumables</option>
-              <option value="Instruments" ${existing && existing.category === 'Instruments' ? 'selected' : ''}>Instruments</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Current Quantity *</label>
-            <input type="number" min="0" id="st-qty" value="${existing ? Number(existing.quantity) : 0}" required>
-          </div>
-          <div class="form-group">
-            <label>Unit (e.g., boxes, vials)</label>
-            <input type="text" id="st-unit" value="${escapeHtml(existing ? existing.unit || 'pcs' : 'pcs')}">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Minimum Reorder Alert Level</label>
-          <input type="number" min="0" id="st-reorder" value="${existing ? Number(existing.reorder_level) : 10}">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">${isEdit ? 'Update Stock' : 'Save Item'}</button>
-      </div>
-    </form>
   `);
 
   document.getElementById('stock-form').addEventListener('submit', async (e) => {
@@ -179,7 +181,7 @@ function openStockModal(existing = null, onDone) {
 
     if (ok) {
       showToast(isEdit ? 'Stock updated.' : 'Item added to inventory.');
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to save inventory item.', 'error');

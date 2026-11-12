@@ -47,63 +47,65 @@ export async function openAddFollowupModal({ leads: preloadedLeads = null, onDon
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">Schedule Follow-up Task / Call</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Schedule Follow-up Task / Call</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-followup-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Related Patient (Optional)</label>
+              <select id="fu-patient">
+                <option value="">-- Select Patient --</option>
+                ${patients
+                  .map((p) => `<option value="${Number(p.id)}">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</option>`)
+                  .join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Or Related Lead (Optional)</label>
+              <select id="fu-lead">
+                <option value="">-- Select Lead --</option>
+                ${leads
+                  .map((l) => `<option value="${Number(l.id)}">${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</option>`)
+                  .join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Scheduled Date *</label>
+              <input type="date" id="fu-date" value="${todayStr}" required>
+            </div>
+            ${
+              staffUsers.length
+                ? `<div class="form-group">
+                    <label>Assign To</label>
+                    <select id="fu-assignee">
+                      <option value="">Self (${escapeHtml(state.user.firstName || '')})</option>
+                      ${staffUsers
+                        .filter((u) => u.role === 'staff' || u.role === 'admin')
+                        .map((u) => `<option value="${Number(u.id)}">${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)} (${escapeHtml(u.role)})</option>`)
+                        .join('')}
+                    </select>
+                  </div>`
+                : ''
+            }
+          </div>
+          <div class="form-group">
+            <label>Call Script / Follow-up Notes</label>
+            <textarea id="fu-notes" rows="3" placeholder="e.g. Remind patient about upcoming root canal hygiene visit"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Follow-Up</button>
+        </div>
+      </form>
     </div>
-    <form id="add-followup-form">
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Related Patient (Optional)</label>
-            <select id="fu-patient">
-              <option value="">-- Select Patient --</option>
-              ${patients
-                .map((p) => `<option value="${Number(p.id)}">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</option>`)
-                .join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Or Related Lead (Optional)</label>
-            <select id="fu-lead">
-              <option value="">-- Select Lead --</option>
-              ${leads
-                .map((l) => `<option value="${Number(l.id)}">${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</option>`)
-                .join('')}
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Scheduled Date *</label>
-            <input type="date" id="fu-date" value="${todayStr}" required>
-          </div>
-          ${
-            staffUsers.length
-              ? `<div class="form-group">
-                  <label>Assign To</label>
-                  <select id="fu-assignee">
-                    <option value="">Self (${escapeHtml(state.user.firstName || '')})</option>
-                    ${staffUsers
-                      .filter((u) => u.role === 'staff' || u.role === 'admin')
-                      .map((u) => `<option value="${Number(u.id)}">${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)} (${escapeHtml(u.role)})</option>`)
-                      .join('')}
-                  </select>
-                </div>`
-              : ''
-          }
-        </div>
-        <div class="form-group">
-          <label>Call Script / Follow-up Notes</label>
-          <textarea id="fu-notes" rows="3" placeholder="e.g. Remind patient about upcoming root canal hygiene visit"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">Schedule Follow-Up</button>
-      </div>
-    </form>
   `);
 
   document.getElementById('add-followup-form').addEventListener('submit', async (e) => {
@@ -128,7 +130,7 @@ export async function openAddFollowupModal({ leads: preloadedLeads = null, onDon
 
     if (ok) {
       showToast('Follow-up scheduled successfully.');
-      close();
+      modal.remove();
       if (typeof onDone === 'function') {
         await onDone();
       } else {

@@ -139,66 +139,68 @@ function openUserModal(existing = null, defaultRole = null, onDone) {
   const isEdit = Boolean(existing);
   const selectedRole = existing ? existing.role : defaultRole || 'staff';
 
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">${isEdit ? 'Edit User Account' : 'Create User Account'}</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
-    </div>
-    <form id="user-form">
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>First Name *</label>
-            <input type="text" id="u-fname" value="${escapeHtml(existing ? existing.first_name : '')}" required>
-          </div>
-          <div class="form-group">
-            <label>Last Name *</label>
-            <input type="text" id="u-lname" value="${escapeHtml(existing ? existing.last_name : '')}" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Email Address *</label>
-            <input type="email" id="u-email" value="${escapeHtml(existing ? existing.email : '')}" required>
-          </div>
-          <div class="form-group">
-            <label>${isEdit ? 'New Password (leave blank to keep current)' : 'Password (min 8 chars) *'}</label>
-            <input type="password" id="u-pass" ${isEdit ? '' : 'required'} minlength="8" placeholder="${isEdit ? 'Optional' : 'At least 8 characters'}">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Role *</label>
-            <select id="u-role" required>
-              <option value="staff" ${selectedRole === 'staff' ? 'selected' : ''}>Reception / Staff</option>
-              <option value="dentist" ${selectedRole === 'dentist' ? 'selected' : ''}>Dentist / Doctor</option>
-              <option value="admin" ${selectedRole === 'admin' ? 'selected' : ''}>Clinic Administrator</option>
-              <option value="patient" ${selectedRole === 'patient' ? 'selected' : ''}>Patient</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="u-phone" value="${escapeHtml(existing ? existing.phone || '' : '')}">
-          </div>
-        </div>
-        <div id="dentist-extra-fields" class="${selectedRole === 'dentist' ? '' : 'hidden'}">
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit ? 'Edit User Account' : 'Create User Account'}</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="user-form">
+        <div class="modal-body">
           <div class="form-row">
             <div class="form-group">
-              <label>Clinical Specialization</label>
-              <input type="text" id="u-spec" value="${escapeHtml(existing ? existing.specialization || '' : '')}" placeholder="e.g. Orthodontics">
+              <label>First Name *</label>
+              <input type="text" id="u-fname" value="${escapeHtml(existing ? existing.first_name : '')}" required>
             </div>
             <div class="form-group">
-              <label>License Number</label>
-              <input type="text" id="u-lic" value="${escapeHtml(existing ? existing.license_number || '' : '')}" placeholder="e.g. DDS-9001">
+              <label>Last Name *</label>
+              <input type="text" id="u-lname" value="${escapeHtml(existing ? existing.last_name : '')}" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" id="u-email" value="${escapeHtml(existing ? existing.email : '')}" required>
+            </div>
+            <div class="form-group">
+              <label>${isEdit ? 'New Password (leave blank to keep current)' : 'Password (min 8 chars) *'}</label>
+              <input type="password" id="u-pass" ${isEdit ? '' : 'required'} minlength="8" placeholder="${isEdit ? 'Optional' : 'At least 8 characters'}">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role *</label>
+              <select id="u-role" required>
+                <option value="staff" ${selectedRole === 'staff' ? 'selected' : ''}>Reception / Staff</option>
+                <option value="dentist" ${selectedRole === 'dentist' ? 'selected' : ''}>Dentist / Doctor</option>
+                <option value="admin" ${selectedRole === 'admin' ? 'selected' : ''}>Clinic Administrator</option>
+                <option value="patient" ${selectedRole === 'patient' ? 'selected' : ''}>Patient</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="u-phone" value="${escapeHtml(existing ? existing.phone || '' : '')}">
+            </div>
+          </div>
+          <div id="dentist-extra-fields" class="${selectedRole === 'dentist' ? '' : 'hidden'}">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Clinical Specialization</label>
+                <input type="text" id="u-spec" value="${escapeHtml(existing ? existing.specialization || '' : '')}" placeholder="e.g. Orthodontics">
+              </div>
+              <div class="form-group">
+                <label>License Number</label>
+                <input type="text" id="u-lic" value="${escapeHtml(existing ? existing.license_number || '' : '')}" placeholder="e.g. DDS-9001">
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">${isEdit ? 'Save Changes' : 'Create Account'}</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Save Changes' : 'Create Account'}</button>
+        </div>
+      </form>
+    </div>
   `);
 
   const roleSelect = document.getElementById('u-role');
@@ -233,7 +235,7 @@ function openUserModal(existing = null, defaultRole = null, onDone) {
 
     if (ok) {
       showToast(isEdit ? 'User account updated.' : 'User account created.');
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to save user.', 'error');
@@ -252,40 +254,42 @@ export async function openDentistAvailabilityModal(dentistId, dentistName, onDon
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">Dr. ${escapeHtml(dentistName)} - Availability Schedule</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
-    </div>
-    <form id="avail-form">
-      <div class="modal-body">
-        <p class="text-sm text-muted mb-4">Configure weekly shift windows. Appointments booked outside these hours will trigger validation warnings.</p>
-        <div class="flex flex-col gap-3">
-          ${days
-            .map((dayName, idx) => {
-              const row = existing.find((e) => Number(e.day_of_week) === idx);
-              return `
-                <div class="flex items-center justify-between p-2 rounded border" style="background: var(--bg-app);">
-                  <label class="flex items-center gap-2 font-bold" style="width: 130px; margin: 0;">
-                    <input type="checkbox" class="day-check" data-day="${idx}" ${row ? 'checked' : ''} style="width:auto;">
-                    ${escapeHtml(dayName)}
-                  </label>
-                  <div class="flex items-center gap-2">
-                    <input type="time" id="start-day-${idx}" value="${escapeHtml(row ? row.start_hour : '09:00')}" style="width: 110px;">
-                    <span>to</span>
-                    <input type="time" id="end-day-${idx}" value="${escapeHtml(row ? row.end_hour : '17:00')}" style="width: 110px;">
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Dr. ${escapeHtml(dentistName)} - Availability Schedule</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="avail-form">
+        <div class="modal-body">
+          <p class="text-sm text-muted mb-4">Configure weekly shift windows. Appointments booked outside these hours will trigger validation warnings.</p>
+          <div class="flex flex-col gap-3">
+            ${days
+              .map((dayName, idx) => {
+                const row = existing.find((e) => Number(e.day_of_week) === idx);
+                return `
+                  <div class="flex items-center justify-between p-2 rounded border" style="background: var(--bg-app);">
+                    <label class="flex items-center gap-2 font-bold" style="width: 130px; margin: 0;">
+                      <input type="checkbox" class="day-check" data-day="${idx}" ${row ? 'checked' : ''} style="width:auto;">
+                      ${escapeHtml(dayName)}
+                    </label>
+                    <div class="flex items-center gap-2">
+                      <input type="time" id="start-day-${idx}" value="${escapeHtml(row ? row.start_hour : '09:00')}" style="width: 110px;">
+                      <span>to</span>
+                      <input type="time" id="end-day-${idx}" value="${escapeHtml(row ? row.end_hour : '17:00')}" style="width: 110px;">
+                    </div>
                   </div>
-                </div>
-              `;
-            })
-            .join('')}
+                `;
+              })
+              .join('')}
+          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Schedule</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Schedule</button>
+        </div>
+      </form>
+    </div>
   `);
 
   document.getElementById('avail-form').addEventListener('submit', async (e) => {
@@ -309,7 +313,7 @@ export async function openDentistAvailabilityModal(dentistId, dentistName, onDon
 
     if (ok) {
       showToast('Dentist availability updated.');
-      close();
+      modal.remove();
       if (typeof onDone === 'function') await onDone();
     } else {
       showToast((data && data.message) || 'Failed to save schedule.', 'error');

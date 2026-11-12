@@ -38,6 +38,15 @@ function loadConfig() {
     .map((o) => o.trim())
     .filter(Boolean);
 
+  const clinicTimezone = (process.env.CLINIC_TIMEZONE || 'UTC').trim();
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: clinicTimezone });
+  } catch {
+    throw new Error(
+      `Fatal configuration error: Invalid CLINIC_TIMEZONE "${clinicTimezone}". Use a valid IANA timezone (e.g., "UTC" or "America/New_York").`
+    );
+  }
+
   return {
     nodeEnv,
     isProduction: nodeEnv === 'production',
@@ -45,6 +54,7 @@ function loadConfig() {
     port: Number.isNaN(parsedPort) ? 3000 : parsedPort,
     jwtSecret,
     corsOrigins,
+    clinicTimezone,
     seedDemoData: process.env.SEED_DEMO_DATA === 'true',
     db: {
       host: process.env.DB_HOST || 'localhost',

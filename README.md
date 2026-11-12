@@ -68,11 +68,12 @@ A full-stack dental clinic management application built with Node.js, Express, M
    ```bash
    cp backend/.env.example backend/.env
    ```
-   Key variables in `backend/.env`:
+   Key variables in `backend/.env` (and Vercel Project Environment Variables):
    - `NODE_ENV` — `development`, `test`, or `production`
    - `PORT` — HTTP server port (default `3000`)
    - `JWT_SECRET` — **Required.** Server fails to start if unset
-   - `CORS_ORIGINS` — Comma-separated allowed origins (e.g. `http://localhost:3000`)
+   - `CORS_ORIGINS` — Comma-separated allowed origins (e.g. `http://localhost:3000` or your Vercel domain)
+   - `CLINIC_TIMEZONE` — IANA timezone for clinic appointment availability checks (default `UTC`, e.g. `America/New_York`)
    - `DB_HOST`, `DB_PORT` (default `3306`), `DB_USER`, `DB_PASSWORD`, `DB_NAME`
    - `SEED_DEMO_DATA` — Must be explicitly set to `true` to seed demo accounts (disabled in production)
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` — SMTP settings for password reset emails

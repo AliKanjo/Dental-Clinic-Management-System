@@ -146,49 +146,51 @@ export async function renderLeadsView(container) {
 }
 
 function openAddLeadModal(onDone) {
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">Add New Prospective Patient Lead</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Add New Prospective Patient Lead</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-lead-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="l-fname" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="l-lname" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="l-phone">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="l-email">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Lead Source</label>
+            <select id="l-source">
+              <option value="Website Booking">Website Booking</option>
+              <option value="Phone Inquiry">Phone Inquiry</option>
+              <option value="Walk-in">Walk-in</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Referral">Patient Referral</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Lead</button>
+        </div>
+      </form>
     </div>
-    <form id="add-lead-form">
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>First Name *</label>
-            <input type="text" id="l-fname" required>
-          </div>
-          <div class="form-group">
-            <label>Last Name *</label>
-            <input type="text" id="l-lname" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" id="l-phone">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="l-email">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Lead Source</label>
-          <select id="l-source">
-            <option value="Website Booking">Website Booking</option>
-            <option value="Phone Inquiry">Phone Inquiry</option>
-            <option value="Walk-in">Walk-in</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Referral">Patient Referral</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Lead</button>
-      </div>
-    </form>
   `);
 
   document.getElementById('add-lead-form').addEventListener('submit', async (e) => {
@@ -208,7 +210,7 @@ function openAddLeadModal(onDone) {
 
     if (ok) {
       showToast('New lead captured.');
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to save lead.', 'error');
@@ -217,35 +219,37 @@ function openAddLeadModal(onDone) {
 }
 
 function openLeadDetailModal(lead, onDone) {
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)} (Lead #${Number(lead.id)})</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="flex flex-col gap-3">
-        <div><strong>Source:</strong> <span class="badge badge-info">${escapeHtml(lead.source || 'Direct')}</span></div>
-        <div><strong>Phone:</strong> ${escapeHtml(lead.phone || 'N/A')}</div>
-        <div><strong>Email:</strong> ${escapeHtml(lead.email || 'N/A')}</div>
-        <div class="form-group mt-2">
-          <label>Pipeline Stage</label>
-          <select id="lead-status-select">
-            <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New Inquiry</option>
-            <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contacted</option>
-            <option value="converted" ${lead.status === 'converted' ? 'selected' : ''}>Converted to Patient</option>
-            <option value="lost" ${lead.status === 'lost' ? 'selected' : ''}>Lost</option>
-          </select>
-        </div>
-        ${
-          lead.status !== 'converted'
-            ? `<div class="p-3 bg-teal-light rounded text-xs" style="background: var(--success-bg); color: var(--success);">Note: Changing status to "Converted to Patient" automatically creates a patient file.</div>`
-            : ''
-        }
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)} (Lead #${Number(lead.id)})</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" data-close-modal>Close</button>
-      <button type="button" class="btn btn-primary" id="btn-save-lead-status">Update Status</button>
+      <div class="modal-body">
+        <div class="flex flex-col gap-3">
+          <div><strong>Source:</strong> <span class="badge badge-info">${escapeHtml(lead.source || 'Direct')}</span></div>
+          <div><strong>Phone:</strong> ${escapeHtml(lead.phone || 'N/A')}</div>
+          <div><strong>Email:</strong> ${escapeHtml(lead.email || 'N/A')}</div>
+          <div class="form-group mt-2">
+            <label>Pipeline Stage</label>
+            <select id="lead-status-select">
+              <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New Inquiry</option>
+              <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+              <option value="converted" ${lead.status === 'converted' ? 'selected' : ''}>Converted to Patient</option>
+              <option value="lost" ${lead.status === 'lost' ? 'selected' : ''}>Lost</option>
+            </select>
+          </div>
+          ${
+            lead.status !== 'converted'
+              ? `<div class="p-3 bg-teal-light rounded text-xs" style="background: var(--success-bg); color: var(--success);">Note: Changing status to "Converted to Patient" automatically creates a patient file.</div>`
+              : ''
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Close</button>
+        <button type="button" class="btn btn-primary" id="btn-save-lead-status">Update Status</button>
+      </div>
     </div>
   `);
 
@@ -266,7 +270,7 @@ function openLeadDetailModal(lead, onDone) {
           ? 'Lead converted and Patient file created!'
           : 'Lead status updated.'
       );
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to update lead.', 'error');

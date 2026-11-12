@@ -7,11 +7,13 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-suite-jwt-secret-key-minimum-32-chars';
 process.env.DB_NAME = process.env.DB_NAME || 'dental_clinic_test_db';
 process.env.CORS_ORIGINS = 'http://localhost:3000,https://allowed.example.com';
+process.env.CLINIC_TIMEZONE = process.env.CLINIC_TIMEZONE || 'UTC';
 process.env.SEED_DEMO_DATA = 'true';
 
 const app = require('../app');
 const db = require('../db');
 const { loadConfig } = require('../config/env');
+const { getTimePartsInTimezone } = require('../services/appointmentService');
 const { runMigrations } = require('../db/migrate');
 const { clearDatabase, seedDemoData } = require('../db/seed');
 const { getTestOutbox, clearTestOutbox } = require('../services/mailService');
@@ -46,13 +48,27 @@ describe('Dental Clinic Management System API', () => {
   });
 
   describe('Startup configuration & CORS security', () => {
-    it('fails loadConfig when JWT_SECRET is missing', () => {
+    it('fails loadConfig when JWT_SECRET is missing and validates CLINIC_TIMEZONE', () => {
       const originalSecret = process.env.JWT_SECRET;
+      const originalTz = process.env.CLINIC_TIMEZONE;
       try {
         delete process.env.JWT_SECRET;
         assert.throws(() => loadConfig(), /JWT_SECRET/);
+        process.env.JWT_SECRET = originalSecret;
+
+        process.env.CLINIC_TIMEZONE = 'Invalid/Timezone_Name';
+        assert.throws(() => loadConfig(), /CLINIC_TIMEZONE/);
+
+        process.env.CLINIC_TIMEZONE = 'America/New_York';
+        const cfg = loadConfig();
+        assert.equal(cfg.clinicTimezone, 'America/New_York');
+
+        // 2026-01-12T14:30:00Z is Monday 09:30 in America/New_York (EST, UTC-5)
+        const parts = getTimePartsInTimezone('2026-01-12T14:30:00.000Z', 'America/New_York');
+        assert.deepEqual(parts, { dayOfWeek: 1, timeStr: '09:30' });
       } finally {
         process.env.JWT_SECRET = originalSecret;
+        process.env.CLINIC_TIMEZONE = originalTz;
       }
     });
 
