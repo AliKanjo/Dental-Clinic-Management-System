@@ -2,7 +2,7 @@
   "name": "dental-clinic-management-system",
   "version": "2.0.0",
   "description": "Comprehensive web-based Dental Clinic Management System",
-  "main": "backend/server.js",
+  "main": "api/index.js",
   "scripts": {
     "start": "node backend/server.js",
     "dev": "node --watch backend/server.js",
