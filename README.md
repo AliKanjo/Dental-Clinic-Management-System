@@ -73,6 +73,7 @@ A full-stack dental clinic management application built with Node.js, Express, M
    - `PORT` — HTTP server port (default `3000`)
    - `JWT_SECRET` — **Required.** Server fails to start if unset
    - `CORS_ORIGINS` — Comma-separated allowed origins (e.g. `http://localhost:3000`)
+   - `CLINIC_TIMEZONE` — IANA time zone the clinic operates in (e.g. `Asia/Riyadh`); dentist shift hours are interpreted in this zone (default `UTC`)
    - `DB_HOST`, `DB_PORT` (default `3306`), `DB_USER`, `DB_PASSWORD`, `DB_NAME`
    - `SEED_DEMO_DATA` — Must be explicitly set to `true` to seed demo accounts (disabled in production)
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` — SMTP settings for password reset emails

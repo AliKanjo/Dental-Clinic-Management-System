@@ -1,14 +1,28 @@
 const db = require('../db');
+const { config } = require('../config/env');
 const { AppError } = require('../middleware/errorHandler');
 
-async function checkDentistAvailability(dentistId, startTime) {
-  const apptDate = new Date(startTime);
-  const dayOfWeek = apptDate.getUTCDay();
-  const apptTimeStr =
-    String(apptDate.getUTCHours()).padStart(2, '0') +
-    ':' +
-    String(apptDate.getUTCMinutes()).padStart(2, '0');
+// Shift hours are stored as clinic wall-clock time, so the appointment
+// instant must be converted to the clinic's time zone before comparing.
+const WEEKDAYS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
+function toClinicDayAndTime(value, timeZone = config.clinicTimezone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(value));
+  const part = (type) => parts.find((p) => p.type === type).value;
+  return {
+    dayOfWeek: WEEKDAYS[part('weekday')],
+    time: `${part('hour')}:${part('minute')}`,
+  };
+}
+
+async function checkDentistAvailability(dentistId, startTime) {
+  const { dayOfWeek, time: apptTimeStr } = toClinicDayAndTime(startTime);
   const hasAnyAvail = await db.get(
     'SELECT id FROM dentist_availability WHERE dentist_id = ?',
     [dentistId]
@@ -146,6 +160,7 @@ async function updateAppointment({ user, appointmentId, data }) {
 }
 
 module.exports = {
+  toClinicDayAndTime,
   listAppointments,
   createAppointment,
   updateAppointment,

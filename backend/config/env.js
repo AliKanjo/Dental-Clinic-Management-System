@@ -38,8 +38,16 @@ function loadConfig() {
     .map((o) => o.trim())
     .filter(Boolean);
 
+  const clinicTimezone = process.env.CLINIC_TIMEZONE || 'UTC';
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: clinicTimezone });
+  } catch (err) {
+    throw new Error(`Fatal configuration error: CLINIC_TIMEZONE "${clinicTimezone}" is not a valid IANA time zone.`);
+  }
+
   return {
     nodeEnv,
+    clinicTimezone,
     isProduction: nodeEnv === 'production',
     isTest: nodeEnv === 'test',
     port: Number.isNaN(parsedPort) ? 3000 : parsedPort,

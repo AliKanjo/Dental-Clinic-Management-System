@@ -8,6 +8,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-suite-jwt-secret-key-mi
 process.env.DB_NAME = process.env.DB_NAME || 'dental_clinic_test_db';
 process.env.CORS_ORIGINS = 'http://localhost:3000,https://allowed.example.com';
 process.env.SEED_DEMO_DATA = 'true';
+process.env.CLINIC_TIMEZONE = 'UTC';
 
 const app = require('../app');
 const db = require('../db');
@@ -15,6 +16,7 @@ const { loadConfig } = require('../config/env');
 const { runMigrations } = require('../db/migrate');
 const { clearDatabase, seedDemoData } = require('../db/seed');
 const { getTestOutbox, clearTestOutbox } = require('../services/mailService');
+const { toClinicDayAndTime } = require('../services/appointmentService');
 
 function nextUtcWeekday(targetDow, weeksAhead = 2) {
   const now = new Date();
@@ -58,7 +60,7 @@ describe('Dental Clinic Management System API', () => {
 
     it('enforces CORS allowlist and rejects disallowed preflight origins', async () => {
       const allowedRes = await request(app)
-        .get('/api/treatments')
+        .get('/api/health')
         .set('Origin', 'https://allowed.example.com');
       assert.equal(allowedRes.status, 200);
       assert.equal(allowedRes.headers['access-control-allow-origin'], 'https://allowed.example.com');
@@ -277,6 +279,16 @@ describe('Dental Clinic Management System API', () => {
   });
 
   describe('Appointments availability and conflict checking', () => {
+    it('converts appointment instants to clinic wall-clock day and time', () => {
+      // 2026-11-30 is a Monday. 07:00Z is 10:00 Monday in Riyadh (UTC+3).
+      assert.deepEqual(toClinicDayAndTime('2026-11-30T07:00:00.000Z', 'Asia/Riyadh'), { dayOfWeek: 1, time: '10:00' });
+      // 22:30Z Monday is already 01:30 Tuesday in Riyadh.
+      assert.deepEqual(toClinicDayAndTime('2026-11-30T22:30:00.000Z', 'Asia/Riyadh'), { dayOfWeek: 2, time: '01:30' });
+      // 02:00Z Monday is still 21:00 Sunday in New York (UTC-5 in November).
+      assert.deepEqual(toClinicDayAndTime('2026-11-30T02:00:00.000Z', 'America/New_York'), { dayOfWeek: 0, time: '21:00' });
+      assert.deepEqual(toClinicDayAndTime('2026-11-30T09:00:00.000Z', 'UTC'), { dayOfWeek: 1, time: '09:00' });
+    });
+
     it('enforces dentist shifts and blocks overlapping scheduled appointments', async () => {
       const { agent: staffAgent } = await loginAs('emily.watson@dental.com', 'staff123');
 
