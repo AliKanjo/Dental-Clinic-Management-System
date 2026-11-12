@@ -7,6 +7,7 @@ A full-stack dental clinic management application built with Node.js, Express, M
 ## Project Structure
 
 ```text
+├── index.js                    # Root entrypoint for Vercel's Express preset (exports backend/app)
 ├── api/
 │   └── index.js                # Vercel serverless entrypoint importing backend/app
 ├── backend/
