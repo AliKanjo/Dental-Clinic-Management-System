@@ -6,21 +6,28 @@ const { config } = require('../config/env');
 const MIGRATIONS_DIR = path.resolve(__dirname, '../migrations');
 
 async function runMigrations() {
-  // Ensure target database exists before opening migration connection
-  const bootstrapConn = await mysql.createConnection({
-    host: config.db.host,
-    port: config.db.port,
-    user: config.db.user,
-    password: config.db.password,
-    connectTimeout: 5000,
-  });
-
+  // Ensure target database exists when user has privileges (managed DBs often pre-create it)
   try {
-    await bootstrapConn.query(
-      `CREATE DATABASE IF NOT EXISTS \`${config.db.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
-    );
-  } finally {
-    await bootstrapConn.end();
+    const bootstrapConn = await mysql.createConnection({
+      host: config.db.host,
+      port: config.db.port,
+      user: config.db.user,
+      password: config.db.password,
+      ...(config.db.ssl ? { ssl: config.db.ssl } : {}),
+      connectTimeout: 5000,
+    });
+
+    try {
+      await bootstrapConn.query(
+        `CREATE DATABASE IF NOT EXISTS \`${config.db.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+      );
+    } finally {
+      await bootstrapConn.end();
+    }
+  } catch (err) {
+    if (err.code !== 'ER_DBACCESS_DENIED_ERROR' && err.code !== 'ER_ACCESS_DENIED_ERROR') {
+      throw err;
+    }
   }
 
   const conn = await mysql.createConnection({
@@ -29,6 +36,7 @@ async function runMigrations() {
     user: config.db.user,
     password: config.db.password,
     database: config.db.database,
+    ...(config.db.ssl ? { ssl: config.db.ssl } : {}),
     multipleStatements: true,
     connectTimeout: 5000,
     timezone: 'Z',

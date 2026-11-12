@@ -2,27 +2,34 @@ const db = require('../db');
 const { config } = require('../config/env');
 const { AppError } = require('../middleware/errorHandler');
 
-// Shift hours are stored as clinic wall-clock time, so the appointment
-// instant must be converted to the clinic's time zone before comparing.
-const WEEKDAYS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const WEEKDAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-function toClinicDayAndTime(value, timeZone = config.clinicTimezone) {
-  const parts = new Intl.DateTimeFormat('en-US', {
+function getTimePartsInTimezone(dateInput, timeZone = config.clinicTimezone) {
+  const apptDate = new Date(dateInput);
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
-  }).formatToParts(new Date(value));
-  const part = (type) => parts.find((p) => p.type === type).value;
+  });
+  const partMap = {};
+  for (const part of formatter.formatToParts(apptDate)) {
+    partMap[part.type] = part.value;
+  }
+
+  const dayOfWeek = WEEKDAY_MAP[partMap.weekday];
+  const hour = partMap.hour === '24' ? '00' : String(partMap.hour).padStart(2, '0');
+  const minute = String(partMap.minute).padStart(2, '0');
   return {
-    dayOfWeek: WEEKDAYS[part('weekday')],
-    time: `${part('hour')}:${part('minute')}`,
+    dayOfWeek,
+    timeStr: `${hour}:${minute}`,
   };
 }
 
 async function checkDentistAvailability(dentistId, startTime) {
-  const { dayOfWeek, time: apptTimeStr } = toClinicDayAndTime(startTime);
+  const { dayOfWeek, timeStr: apptTimeStr } = getTimePartsInTimezone(startTime, config.clinicTimezone);
+
   const hasAnyAvail = await db.get(
     'SELECT id FROM dentist_availability WHERE dentist_id = ?',
     [dentistId]
@@ -160,7 +167,7 @@ async function updateAppointment({ user, appointmentId, data }) {
 }
 
 module.exports = {
-  toClinicDayAndTime,
+  getTimePartsInTimezone,
   listAppointments,
   createAppointment,
   updateAppointment,

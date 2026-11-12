@@ -100,54 +100,56 @@ async function openWritePrescriptionModal(onDone) {
     return;
   }
 
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">Write New Prescription</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">Write New Prescription</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-rx-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Patient *</label>
+              <select id="rx-patient" required>
+                ${patients
+                  .map((p) => `<option value="${Number(p.id)}">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</option>`)
+                  .join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Prescribing Dentist *</label>
+              <select id="rx-dentist" required>
+                ${dentists
+                  .map(
+                    (d) =>
+                      `<option value="${Number(d.id)}" ${state.user.relatedId === d.id ? 'selected' : ''}>Dr. ${escapeHtml(d.first_name)} ${escapeHtml(d.last_name)}</option>`
+                  )
+                  .join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Medication Name *</label>
+              <input type="text" id="rx-med" placeholder="e.g. Amoxicillin 500mg" required>
+            </div>
+            <div class="form-group">
+              <label>Dosage / Quantity</label>
+              <input type="text" id="rx-dosage" placeholder="e.g. 21 Capsules">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Instructions &amp; Warnings</label>
+            <textarea id="rx-inst" rows="3" placeholder="e.g. Take 1 capsule by mouth 3 times a day for 7 days."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Issue Prescription</button>
+        </div>
+      </form>
     </div>
-    <form id="add-rx-form">
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Patient *</label>
-            <select id="rx-patient" required>
-              ${patients
-                .map((p) => `<option value="${Number(p.id)}">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</option>`)
-                .join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Prescribing Dentist *</label>
-            <select id="rx-dentist" required>
-              ${dentists
-                .map(
-                  (d) =>
-                    `<option value="${Number(d.id)}" ${state.user.relatedId === d.id ? 'selected' : ''}>Dr. ${escapeHtml(d.first_name)} ${escapeHtml(d.last_name)}</option>`
-                )
-                .join('')}
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Medication Name *</label>
-            <input type="text" id="rx-med" placeholder="e.g. Amoxicillin 500mg" required>
-          </div>
-          <div class="form-group">
-            <label>Dosage / Quantity</label>
-            <input type="text" id="rx-dosage" placeholder="e.g. 21 Capsules">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Instructions &amp; Warnings</label>
-          <textarea id="rx-inst" rows="3" placeholder="e.g. Take 1 capsule by mouth 3 times a day for 7 days."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">Issue Prescription</button>
-      </div>
-    </form>
   `);
 
   document.getElementById('add-rx-form').addEventListener('submit', async (e) => {
@@ -167,7 +169,7 @@ async function openWritePrescriptionModal(onDone) {
 
     if (ok) {
       showToast('Prescription issued.');
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to issue prescription.', 'error');

@@ -87,31 +87,33 @@ export async function renderPackagesView(container) {
 
 function openTreatmentModal(existing = null, onDone) {
   const isEdit = Boolean(existing);
-  const { close } = createModal(`
-    <div class="modal-header">
-      <div class="modal-title">${isEdit ? 'Edit Service' : 'Add Dental Service'}</div>
-      <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+  const modal = createModal(`
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit ? 'Edit Service' : 'Add Dental Service'}</div>
+        <button type="button" class="btn-icon" data-close-modal><i data-lucide="x"></i></button>
+      </div>
+      <form id="pkg-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Procedure / Service Name *</label>
+            <input type="text" id="pkg-name" value="${escapeHtml(existing ? existing.name : '')}" required>
+          </div>
+          <div class="form-group">
+            <label>Base Fee ($) *</label>
+            <input type="number" step="0.01" min="0" id="pkg-cost" value="${existing ? Number(existing.base_cost) : ''}" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="pkg-desc" rows="3">${escapeHtml(existing ? existing.description || '' : '')}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">${isEdit ? 'Update Service' : 'Save Service'}</button>
+        </div>
+      </form>
     </div>
-    <form id="pkg-form">
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Procedure / Service Name *</label>
-          <input type="text" id="pkg-name" value="${escapeHtml(existing ? existing.name : '')}" required>
-        </div>
-        <div class="form-group">
-          <label>Base Fee ($) *</label>
-          <input type="number" step="0.01" min="0" id="pkg-cost" value="${existing ? Number(existing.base_cost) : ''}" required>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="pkg-desc" rows="3">${escapeHtml(existing ? existing.description || '' : '')}</textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
-        <button type="submit" class="btn btn-primary">${isEdit ? 'Update Service' : 'Save Service'}</button>
-      </div>
-    </form>
   `);
 
   document.getElementById('pkg-form').addEventListener('submit', async (e) => {
@@ -132,7 +134,7 @@ function openTreatmentModal(existing = null, onDone) {
 
     if (ok) {
       showToast(isEdit ? 'Service updated.' : 'Service added to catalog.');
-      close();
+      modal.remove();
       await onDone();
     } else {
       showToast((data && data.message) || 'Failed to save service.', 'error');

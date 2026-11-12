@@ -11,6 +11,7 @@ function getPool() {
       user: config.db.user,
       password: config.db.password,
       database: config.db.database,
+      ...(config.db.ssl ? { ssl: config.db.ssl } : {}),
       waitForConnections: true,
       connectionLimit: 10,
       connectTimeout: 5000,
