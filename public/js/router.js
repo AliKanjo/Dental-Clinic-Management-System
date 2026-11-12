@@ -124,7 +124,6 @@ export function renderSidebar() {
     ];
   } else if (state.user.role === 'patient') {
     menu = [
-      { key: 'dashboard', label: 'Dashboard', icon: 'layout' },
       {
         category: 'MY ACCOUNT',
         items: [{ key: 'profile', label: 'My Profile', icon: 'user' }],
@@ -188,6 +187,10 @@ export function renderSidebar() {
 }
 
 export async function navigate(route) {
+  // Clinic analytics are staff-only; send patients to their own landing page.
+  if (state.user?.role === 'patient' && (route === 'dashboard' || route === 'analytics')) {
+    route = getDefaultRouteForRole('patient');
+  }
   state.currentRoute = route;
 
   document.querySelectorAll('.menu-link').forEach((link) => {

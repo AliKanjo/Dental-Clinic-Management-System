@@ -74,7 +74,7 @@ describe('Dental Clinic Management System API', () => {
 
     it('enforces CORS allowlist and rejects disallowed preflight origins', async () => {
       const allowedRes = await request(app)
-        .get('/api/treatments')
+        .get('/api/health')
         .set('Origin', 'https://allowed.example.com');
       assert.equal(allowedRes.status, 200);
       assert.equal(allowedRes.headers['access-control-allow-origin'], 'https://allowed.example.com');
