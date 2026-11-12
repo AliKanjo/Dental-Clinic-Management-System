@@ -8,10 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Lucide Icons (loaded via CDN) -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Chart.js for Business Dashboard -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons (pinned version with SRI) -->
+  <script
+    src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"
+    integrity="sha384-hJnF5AwidE18GSWTAGHv3ByzzvfNZ1Tcx5y1UUV3WkauuMCEzBJBMSwSt/PUPXnM"
+    crossorigin="anonymous"></script>
+  <!-- Chart.js for Business Dashboard (pinned version with SRI) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+    integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC"
+    crossorigin="anonymous"></script>
   <!-- Custom Styling -->
   <link rel="stylesheet" href="/style.css?v=2">
 </head>
@@ -52,36 +58,27 @@
             <p class="auth-toggle">Don't have an account? <a href="#" id="go-to-register">Sign Up</a></p>
           </form>
 
-          <!-- Register Form -->
+          <!-- Register Form (Patient Self-Registration Only) -->
           <form id="register-form" class="auth-form hidden">
-            <h2>Create Your Account</h2>
-            <p class="auth-subtitle">Choose your role and register to access the clinic system.</p>
+            <h2>Create Patient Account</h2>
+            <p class="auth-subtitle">Register as a patient to book appointments and view your dental records.</p>
             <div class="form-row">
               <div class="form-group">
                 <label for="reg-first-name">First Name</label>
-                <input type="text" id="reg-first-name" placeholder="John">
+                <input type="text" id="reg-first-name" required placeholder="John">
               </div>
               <div class="form-group">
                 <label for="reg-last-name">Last Name</label>
-                <input type="text" id="reg-last-name" placeholder="Doe">
+                <input type="text" id="reg-last-name" required placeholder="Doe">
               </div>
             </div>
             <div class="form-group">
               <label for="reg-email">Email Address</label>
-              <input type="email" id="reg-email" placeholder="john.doe@email.com">
+              <input type="email" id="reg-email" required placeholder="john.doe@email.com">
             </div>
             <div class="form-group">
-              <label for="reg-password">Create Password</label>
-              <input type="password" id="reg-password" placeholder="••••••••">
-            </div>
-            <div class="form-group">
-              <label for="reg-role">Account Role</label>
-              <select id="reg-role" style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--bg-primary); color: var(--text-primary); width:100%;">
-                <option value="patient">Patient</option>
-                <option value="dentist">Dentist (Doctor)</option>
-                <option value="staff">Clinic Staff</option>
-                <option value="admin">Administrator</option>
-              </select>
+              <label for="reg-password">Create Password (min 8 characters)</label>
+              <input type="password" id="reg-password" required minlength="8" placeholder="••••••••">
             </div>
             <div class="form-group">
               <label for="reg-phone">Phone Number</label>
@@ -107,11 +104,11 @@
             <div id="forgot-step-2" class="hidden">
               <div class="form-group" style="margin-top:16px;">
                 <label for="forgot-code">6-Digit Verification Code</label>
-                <input type="text" id="forgot-code" placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight:600; font-size:1.1rem; text-align:center;">
+                <input type="text" id="forgot-code" placeholder="123456" maxlength="6" pattern="\d{6}" style="letter-spacing: 4px; font-weight:600; font-size:1.1rem; text-align:center;">
               </div>
               <div class="form-group">
-                <label for="forgot-new-password">New Password</label>
-                <input type="password" id="forgot-new-password" placeholder="••••••••">
+                <label for="forgot-new-password">New Password (min 8 characters)</label>
+                <input type="password" id="forgot-new-password" minlength="8" placeholder="••••••••">
               </div>
               <button type="submit" class="btn btn-primary btn-block">Reset & Save Password</button>
             </div>
@@ -259,10 +256,10 @@
             <div class="med-footer-col">
               <h4 class="med-footer-heading">Features</h4>
               <ul class="med-footer-links">
-                <li><a href="#appointments" onclick="navigate('appointments')">Scheduling &amp; Reminders</a></li>
-                <li><a href="#patients" onclick="navigate('patients')">Patient Records (EHR)</a></li>
-                <li><a href="#billing" onclick="navigate('billing')">Billing &amp; Payments</a></li>
-                <li><a href="#stock" onclick="navigate('stock')">Inventory Management</a></li>
+                <li><a href="#appointments" class="footer-nav-link" data-route="appointments">Scheduling &amp; Reminders</a></li>
+                <li><a href="#patients" class="footer-nav-link" data-route="patients">Patient Records (EHR)</a></li>
+                <li><a href="#billing" class="footer-nav-link" data-route="billing">Billing &amp; Payments</a></li>
+                <li><a href="#stock" class="footer-nav-link" data-route="stock">Inventory Management</a></li>
               </ul>
             </div>
 
@@ -270,10 +267,10 @@
             <div class="med-footer-col">
               <h4 class="med-footer-heading">Resources</h4>
               <ul class="med-footer-links">
-                <li><a href="#documents" onclick="navigate('documents')">Help Center / Guides</a></li>
-                <li><a href="#followups" onclick="navigate('followups')">Contact Support</a></li>
-                <li><a href="#settings" onclick="navigate('settings')">Privacy &amp; Security</a></li>
-                <li><a href="#settings" onclick="navigate('settings')">Terms of Service</a></li>
+                <li><a href="#documents" class="footer-nav-link" data-route="documents">Help Center / Guides</a></li>
+                <li><a href="#followups" class="footer-nav-link" data-route="followups">Contact Support</a></li>
+                <li><a href="#settings" class="footer-nav-link" data-route="settings">Privacy &amp; Security</a></li>
+                <li><a href="#settings" class="footer-nav-link" data-route="settings">Terms of Service</a></li>
               </ul>
             </div>
           </div>
@@ -296,7 +293,7 @@
     </main>
   </div>
 
-  <!-- Core App Controller Script -->
-  <script src="/app.js"></script>
+  <!-- Modular ES Application Entrypoint -->
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>
