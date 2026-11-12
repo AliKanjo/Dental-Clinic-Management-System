@@ -29,8 +29,33 @@ function loadConfig() {
   }
 
   const parsedPort = Number.parseInt(process.env.PORT || '3000', 10);
-  const parsedDbPort = Number.parseInt(process.env.DB_PORT || '3306', 10);
   const parsedSmtpPort = Number.parseInt(process.env.SMTP_PORT || '587', 10);
+
+  // Support either explicit DB_* env vars or a connection URL (DATABASE_URL / MYSQL_URL)
+  const dbUrlRaw = process.env.DATABASE_URL || process.env.MYSQL_URL || '';
+  let parsedUrlDb = null;
+  if (dbUrlRaw && !process.env.DB_HOST) {
+    try {
+      const parsed = new URL(dbUrlRaw);
+      const sslParam = (parsed.searchParams.get('ssl') || parsed.searchParams.get('ssl-mode') || '').toLowerCase();
+      parsedUrlDb = {
+        host: parsed.hostname || 'localhost',
+        port: parsed.port ? Number.parseInt(parsed.port, 10) : 3306,
+        user: decodeURIComponent(parsed.username || 'root'),
+        password: decodeURIComponent(parsed.password || ''),
+        database: parsed.pathname ? decodeURIComponent(parsed.pathname.replace(/^\//, '')) : 'dental_clinic_db',
+        wantsSsl: sslParam === 'true' || sslParam === 'required' || sslParam === 'require' || sslParam === 'verify_ca' || sslParam === 'verify_identity',
+      };
+    } catch {
+      throw new Error('Fatal configuration error: Invalid DATABASE_URL / MYSQL_URL format.');
+    }
+  }
+
+  const parsedDbPort = Number.parseInt(process.env.DB_PORT || (parsedUrlDb ? String(parsedUrlDb.port) : '3306'), 10);
+  const sslEnabled = process.env.DB_SSL === 'true' || (parsedUrlDb ? parsedUrlDb.wantsSsl : false);
+  const sslConfig = sslEnabled
+    ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+    : undefined;
 
   const corsRaw = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || (nodeEnv === 'production' ? '' : 'http://localhost:3000');
   const corsOrigins = corsRaw
@@ -57,11 +82,12 @@ function loadConfig() {
     clinicTimezone,
     seedDemoData: process.env.SEED_DEMO_DATA === 'true',
     db: {
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST || (parsedUrlDb ? parsedUrlDb.host : 'localhost'),
       port: Number.isNaN(parsedDbPort) ? 3306 : parsedDbPort,
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'dental_clinic_db',
+      user: process.env.DB_USER || (parsedUrlDb ? parsedUrlDb.user : 'root'),
+      password: process.env.DB_PASSWORD ?? (parsedUrlDb ? parsedUrlDb.password : ''),
+      database: process.env.DB_NAME || (parsedUrlDb ? parsedUrlDb.database : 'dental_clinic_db'),
+      ssl: sslConfig,
     },
     smtp: {
       host: process.env.SMTP_HOST || '',
